@@ -1,6 +1,8 @@
+import scrapy
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 from scrapy.crawler import CrawlerProcess
+from scrapy.http import Request
 
 class CrawlingAgent(CrawlSpider):
     name = "timeForKids"
@@ -17,37 +19,50 @@ class CrawlingAgent(CrawlSpider):
     #     item = scrapy.Item()
     #     item['url'] = response.url
     #     return item
-
+class ArticleItem(scrapy.Item):
+    title = scrapy.Field()
+    text = scrapy.Field()
 class CrawlingAgent(CrawlSpider):
     name = "newsRound"
     allowed_domains = ["bbc.co.uk"] 
-    start_urls = [
-        "https://www.bbc.co.uk/newsround"
-    ]
+    start_urls = ["https://www.bbc.co.uk/newsround"]
+    
     rules = (
-        Rule(LinkExtractor(allow=('/newsround/[6-9]{2}\d+$')), callback='parse_item'), #filters latest news (needs to be made dynamic later e.g. full scan and get largest ID then subtract 30)
+        Rule(LinkExtractor(allow=('/newsround/[6-9][6-9]\d*$')), callback='collect_links'),
     )
+
     def __init__(self, *args, **kwargs):
         super(CrawlingAgent, self).__init__(*args, **kwargs)
         self.article_links = []
 
-    def parse_item(self, response):
-        # Extract the numeric ID from the URL
-        numeric_id = int(response.url.split('/')[-1])
-        # Store the URL and the numeric ID
-        self.article_links.append((numeric_id, response.url))
+    def parse_article(self, response):
+        print("Entered parse_article")  # Debug: Confirm entering the method
+        item = ArticleItem()
+        item['title'] = response.xpath('//h1/text()').get()  # Update this XPath according to the site's structure
+        item['text'] = response.xpath('//div[@class="article-text"]/p//text()').get()  # Update this XPath
+        print("Parsed article:", item['title'])  # Debug: Print the title
+        yield item
 
-    def closed(self, reason):
-        # Sort the collected links based on their numeric ID in descending order
-        self.article_links.sort(reverse=True, key=lambda x: x[0])
-        # Select the top 30 newest articles
-        top_30_links = self.article_links[:30]
-        # Process the top 30 links as you see fit
-        for link in top_30_links:
-            print(f"Article ID: {link[0]}, URL: {link[1]}")
+    def collect_links(self, response):
+        # Collecting links
+        numeric_id = int(response.url.split('/')[-1])
+        self.article_links.append((numeric_id, response.url))
+        
+        # Once enough links are collected, sort and yield requests for top 30 articles
+        if len(self.article_links) >= 30:  
+            self.article_links.sort(reverse=True, key=lambda x: x[0])
+            top_30_links = self.article_links[:30]
+
+            for _, url in top_30_links:
+                print("Yielding request for:", url)
+                yield Request(url, callback=self.parse_article)
 
 # Main runner
 if __name__ == "__main__":
-    process = CrawlerProcess()
+    process = CrawlerProcess(settings={
+        "FEEDS": {
+            "articles.json": {"format": "json"},
+        },
+    })
     process.crawl(CrawlingAgent)
     process.start()
