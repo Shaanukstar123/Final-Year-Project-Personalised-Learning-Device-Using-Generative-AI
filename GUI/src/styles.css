@@ -1,0 +1,35 @@
+body, html {
+    height: 100%;
+    margin: 0;
+    font-family: Arial, sans-serif;
+}
+
+.container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+
+.subject-block {
+    width: 150px; /* Adjust size as needed */
+    height: 150px;
+    margin: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 20px; /* Rounded corners */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Shadow effect */
+    transition: transform 0.3s; /* Smooth scaling transition */
+    cursor: pointer; /* Indicate clickable items */
+}
+
+/* Sample colors for blocks */
+#history { background-color: #f76c6c; }
+#geography { background-color: #8cd867; }
+#english { background-color: #65aadd; }
+
+.subject-block:hover {
+    transform: scale(1.1); /* Scale up block on hover */
+}

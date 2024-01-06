@@ -1,0 +1,21 @@
+{
+  "name": "electrongui",
+  "version": "1.0.0",
+  "description": "Front-end for Educational Narrative Tool in Electron JS",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "build:css": "postcss src/assets/css/tailwind.css -o src/assets/css/output.css"
+  },
+  "author": "Shaanuka Gunaratne",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^28.1.1"
+  },
+  "dependencies": {
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.33",
+    "postcss-cli": "^11.0.0",
+    "tailwindcss": "^3.4.1"
+  }
+}

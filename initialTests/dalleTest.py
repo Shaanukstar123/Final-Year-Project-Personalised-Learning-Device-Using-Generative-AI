@@ -1,6 +1,5 @@
 #key = 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
 from openai import OpenAI
-import openai
 
 client = OpenAI(
     api_key = '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'
