@@ -8,23 +8,28 @@
     <link rel="stylesheet" href="../../assets/css/output.css"> <!-- Path to Tailwind CSS -->
 </head>
 <body class="bg-gradient-to-r from-blue-300 to-purple-300 flex justify-center items-center min-h-screen">
-
-    <div class="topics-container">
+    <script src="home.js"></script>
+    <div class="topics-container ">
         <!-- First Row of Topics -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl">
+        <div class="grid grid-cols-2 md:grid-cols-2 gap-4 max-w-4xl">
             <div class="topic-block history rounded-xl shadow-xl transform hover:scale-105 transition duration-300"></div>
             <div class="topic-block geography rounded-xl shadow-xl transform hover:scale-105 transition duration-300"></div>
-            <div class="topic-block english rounded-xl shadow-xl transform hover:scale-105 transition duration-300"></div>
+            
         </div>
         <!-- Second Row of Topics -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl">
+        <div class="grid grid-cols-2 md:grid-cols-2 gap-4 max-w-4xl">
             <div class="topic-block maths rounded-xl shadow-xl transform hover:scale-105 transition duration-300"></div>
             <div class="topic-block science rounded-xl shadow-xl transform hover:scale-105 transition duration-300"></div>
         </div>
+        <!-- Third Row of Topics -->
+        <div class="grid grid-cols-2 md:grid-cols-2 gap-4 max-w-4xl">
+            <div class="topic-block english rounded-xl shadow-xl transform hover:scale-105 transition duration-300"></div>
+            <div class="topic-block music rounded-xl shadow-xl transform hover:scale-105 transition duration-300"></div>
+        </div>
     </div>
 
-    <div class = "around-the-world-container">
-        <div class="around-the-world-block rounded-xl shadow-xl transform hover:scale-105 transition duration-300"></div>
+        <div id="bottom-topics" class="bottom-topics-container">
+
     </div>
 
 </body>

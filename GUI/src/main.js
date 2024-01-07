@@ -7,8 +7,8 @@ function createWindow () {
     webPreferences: {
       webSecurity: false, //remove this after development to avoid security issues
     },
-    width: 800,
-    height: 480, //resolution of pi display
+    width: 480,
+    height: 800, //resolution of pi display
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'), // or remove if not using
       nodeIntegration: true

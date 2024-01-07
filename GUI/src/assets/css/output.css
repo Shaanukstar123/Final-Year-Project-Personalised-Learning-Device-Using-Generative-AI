@@ -512,6 +512,12 @@ video {
 }
 .grid-cols-1 {
   grid-template-columns: repeat(1, minmax(0, 1fr));
+  
+}
+
+.grid-cols-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  
 }
 .items-center {
   align-items: center;
@@ -621,18 +627,63 @@ video {
 .maths {
   background-image: url('../images/homepage/science.webp');
 }
-/*"topic-block bg-red-400 hover:bg-red-500 rounded-xl shadow-xl p-6 text-white text-2xl font-bold text-center cursor-pointer transform hover:scale-105 transition duration-300">*/
+.music {
+  background-image: url('../images/homepage/music.png');
+}
+
 /* General styles for all topic blocks */
 .topic-block {
+  margin-top: 1vw;
+  margin-bottom: 1vw; 
+  width : 40vw;
+  height: 20vw;
+  border-radius: 20px;
+  background-size: cover;
+  background-position: center;
+  color: white;
+  display: flex;
+}
+
+.topic-button {
+  margin-top: 1vw;
+  margin-bottom: 1vw; 
   width : 20vw;
   height: 10vw;
   border-radius: 20px;
-  /*expand slightly when hovering*/
   background-size: cover;
   background-position: center;
-  color: white; /* or any color that makes the text visible over the image */
+  color: white;
   display: flex;
-  justify-content: center;
-  align-items: center;
-  /* Add other styles like height, width, border-radius as needed */
+
+}
+
+/* Container for bottom topics */
+.bottom-topics-container {
+  display: flex; /* Using flexbox */
+  flex-wrap: wrap; /* Allow multiple rows */
+  justify-content: center; /* Center items horizontally */
+  align-items: center; /* Center items vertically */
+  gap: 10px; /* Space between buttons */
+  padding: 20px; /* Padding around the entire container */
+  position: absolute; /* Position it at the bottom */
+  bottom: 0;
+  width: 100%; /* Take the full width */
+}
+
+/* Style for each smaller topic button */
+.bottom-topic-button {
+  background-color: #ddd; /* Example background color */
+  color: #333; /* Example text color */
+  border-radius: 10px; /* Rounded corners */
+  padding: 10px 15px; /* Smaller padding */
+  font-size: 0.8rem; /* Smaller font size */
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Subtle shadow */
+  cursor: pointer; /* Cursor indication for button */
+  transition: all 0.3s ease; /* Smooth transition for hover */
+}
+
+.bottom-topic-button:hover {
+  transform: translateY(-2px); /* Slight raise effect on hover */
+  box-shadow: 0 4px 6px rgba(0,0,0,0.15); /* Enhance shadow on hover */
 }
