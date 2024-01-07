@@ -603,3 +603,36 @@ video {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
+
+/* Homepage styles */
+
+.history {
+  background-image: url('../images/homepage/history.png');
+}
+.geography {
+  background-image: url('../images/homepage/geography.jpg');
+}
+.english {
+  background-image: url('../images/homepage/english.png');
+}
+.science {
+  background-image: url('../images/homepage/maths.webp');
+}
+.maths {
+  background-image: url('../images/homepage/science.webp');
+}
+/*"topic-block bg-red-400 hover:bg-red-500 rounded-xl shadow-xl p-6 text-white text-2xl font-bold text-center cursor-pointer transform hover:scale-105 transition duration-300">*/
+/* General styles for all topic blocks */
+.topic-block {
+  width : 20vw;
+  height: 10vw;
+  border-radius: 20px;
+  /*expand slightly when hovering*/
+  background-size: cover;
+  background-position: center;
+  color: white; /* or any color that makes the text visible over the image */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* Add other styles like height, width, border-radius as needed */
+}
