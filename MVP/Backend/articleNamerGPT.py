@@ -4,44 +4,53 @@ import json
 client = OpenAI(api_key='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')
 messages = [
     {"role": "system", "content": "You are a topic chooser for a children's app. "
-     +"Given a list of article names, choose the articles that best represent topics around the world that "
+     +"Given a list of article names and id, choose the articles that best represent topics around the world that "
      + "kids should know. Replace the names with a 1 word topic name, and the other names replace with '_' "
-      +"and return in the same format. The topics should be very basic but also informative. E.g. Article about National Cinema Day = 'Cinema'"}
+      +"and return in the same format and length. The topics should be very basic but also informative. E.g. Article about National Cinema Day = 'Cinema'. Return list of id: new name"}
 ]
-# def filterArticles(names):
-#     prompt = "Only output a string list of names, not content: These articles are web scraped so some may not be relevant or even full articles at all. Some are quizes and some are descriptions or videos. Please filter out any of them by replacing their names with '_' and return a list of just names in the same order and same names apart from the _ . Articles: "
-#     messages.append({"role": "user", "content": prompt+ names})
-#     chat = client.chat.completions.create(
-#             model="gpt-3.5-turbo-1106",
-#             messages=messages
-#         )
-#     print("ChatGPT: " + chat.choices[0].message.content)
-#     return chat.choices[0].message.content
 
-def generate_title_with_gpt(names):
-    messages.append({"role": "user", "content": names})
+def generate_title_with_gpt(articles):
+    dictToString = ""
+    for i in articles:
+        dictToString += str(i['id']) + ":" + i['name'] + ", "
+    messages.append({"role": "user", "content": dictToString})
     chat = client.chat.completions.create(
             model="gpt-3.5-turbo-1106",
             messages=messages
         )
     reply = chat.choices[0].message.content
 
-    return (f"ChatGPT: {reply}")
+    return (reply)
 
-# Example usage with a JSON file containing articles
-with open('webCrawler/output.json', 'r') as file:
-    ##takes in a list of articles and outputs a dictionary names:content in comma separated format
-    articles = json.load(file)
-    nameList = ""
-    jsonInString = ""
-    for article in articles:
-        nameList += article['name'] + ", "
-        jsonInString += json.dumps(article) + ", "
+def getArticles():
+    with open('webCrawler/output.json', 'r') as file:
+        ##takes in a list of articles and outputs a dictionary names:content in comma separated format
+        articles = json.load(file)
+        nameList = {} #id:name
+        for article in articles:
+            nameList[article['id']] = article['name']
+    return articles
 
-
-# names = filterArticles(nameList)
-# print(names)
-print(generate_title_with_gpt(nameList))
-
-# Output the modified data with new GPT-generated titles
-#print(json.dumps(articles, indent=2))
+def addNewNames(nameList):
+    nameList = nameList.split(',')
+    articleDict = {}
+    for i in nameList:
+        i = i.split(':')
+        if len(i)>1:
+            articleDict[int(i[0])] = i[1]
+    print("New: ",nameList)
+    ##Overwrites the output.json file with the new names. Indexes are the same
+    with open('webCrawler/output.json', 'r') as file:
+        articles = json.load(file)
+        for id in articleDict:
+            print(id)
+            for article in articles:
+                if article['id'] == id:
+                    article['new_title'] = articleDict[id]
+                    print (article['new_title'])
+    with open('webCrawler/output.json', 'w') as file:
+        json.dump(articles, file, indent=2)
+articles = getArticles()
+newNames = generate_title_with_gpt(articles)
+print(newNames)
+addNewNames(newNames)
