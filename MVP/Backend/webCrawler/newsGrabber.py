@@ -25,11 +25,11 @@ class CrawlingAgent(CrawlSpider):
             }
 
 def run_crawler():
-    if os.path.exists('output.json'):
-        os.remove('output.json')
+    if os.path.exists('../data/output.json'):
+        os.remove('../data/output.json')
     process = CrawlerProcess(settings={
         'FEED_FORMAT': 'json',
-        'FEED_URI': 'output.json',
+        'FEED_URI': '../data/output.json',
         'LOG_LEVEL': 'INFO',
         'CLOSESPIDER_ITEMCOUNT': 10
     })
@@ -39,7 +39,7 @@ def run_crawler():
 def fetch_news():
     run_crawler()
     try:
-        with open('output.json', 'r') as file:
+        with open('../data/output.json', 'r') as file:
             news_data = json.load(file)
         return news_data
     except FileNotFoundError:

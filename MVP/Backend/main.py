@@ -1,22 +1,22 @@
 from flask import Flask, jsonify
-from threading import Thread
+# from threading import Thread
 from webCrawler.newsGrabber import run_crawler
+from articleNamerGPT import generateNewNames
+import json
 
 app = Flask(__name__)
 
-@app.route('/get_news', methods=['GET'])
-def start_crawler():
-    thread = Thread(target=run_crawler)
-    thread.start()
-    return jsonify({"message": "Crawler started"})
-
-# ... (existing Flask code)
-
 @app.route('/update_news', methods=['GET'])
-def update_news():
-    news_data = fetch_news()
-    return jsonify(news_data)
+def start_crawler():
+    run_crawler()
+    return ("data fetched")
 
-
+@app.route('/get_topics', methods=['GET'])
+def get_topics():
+    generateNewNames() #updates json with new topic names
+    with open('data/output.json', 'r') as file:
+        data = json.load(file)
+        return jsonify(data)
+    
 if __name__ == "__main__":
     app.run(debug=True)
