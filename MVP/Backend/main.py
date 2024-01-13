@@ -3,6 +3,7 @@ from flask_cors import CORS
 # from threading import Thread
 from webCrawler.newsGrabber import run_crawler
 from articleNamerGPT import generateNewNames
+from storyGPT import generateStoryWithGPT
 import json
 
 app = Flask(__name__)
@@ -19,6 +20,15 @@ def get_topics():
     with open('data/output.json', 'r') as file:
         data = json.load(file)
         return jsonify(data)
+    
+@app.route('/fetch_story/<id>', methods=['GET'])
+def get_story(id):
+    with open('data/output.json', 'r') as file:
+        data = json.load(file)
+        for article in data:
+            if int(article['id']) == int(id):
+                return jsonify(generateStoryWithGPT(article['content']))
+        return ("Article not found")
     
 if __name__ == "__main__":
     app.run(debug=True)

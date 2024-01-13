@@ -691,12 +691,13 @@ video {
 
 .trending-title {
   text-align: center; /* Center align text */
-  color: #4afc77; /* Gold color - choose any kid-friendly color */
+  color: #eff0b3; /* Gold color - choose any kid-friendly color */
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); /* Text shadow for depth */
-  margin-top: 30px; /* Space above the title */
-  margin-bottom: 30px; /* Space below the title */
-  font-size: 48px; /* Larger font size */
+  margin-top: 200px; /* Space above the title */
+  margin-bottom: 5px; /* Space below the title */
+  font-size: 40px; /* Larger font size */
   width: 100%; /* Ensure full width for center alignment */
 }
-
-/* Add any additional custom styles here */
+@keyframes fadeIn {
+  to { opacity: 1; }
+}
