@@ -15,13 +15,14 @@ document.addEventListener('DOMContentLoaded', () => {
 function displayContentWithAnimation(container, content) {
     console.log("Content: ", content);
     // Split the content into words or characters
-    const words = content.split(' ');
+
+    const words = content.split('.');
 
     words.forEach((word, index) => {
         const span = document.createElement('span');
-        span.textContent = word + ' ';
+        span.textContent = word + '. ';
         span.style.opacity = 0;
-        span.style.animation = `fadeIn 0.5s ease forwards ${index * 0.5}s`;
+        span.style.animation = `fadeIn 0.5s ease forwards ${index * 3}s`;
         container.appendChild(span);
     });
 }

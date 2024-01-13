@@ -698,6 +698,29 @@ video {
   font-size: 40px; /* Larger font size */
   width: 100%; /* Ensure full width for center alignment */
 }
+.story-page {
+  background-image: url('../images/storypage/stainedPaper.jpg');
+  font-family: 'Times New Roman', Times, serif;
+  font-size: large;
+  height:100vh;
+  width:100vw;
+
+}
+.story-container{
+  font-family: 'Times New Roman', Times, serif;
+  margin-top: 5vh;
+  margin-left: 5vw;
+  margin-right: 5vw;
+  margin-bottom: 5vh;
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  color: #3b3b3b;
+  font-size: 1.2rem;
+  text-align: center;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
 @keyframes fadeIn {
   to { opacity: 1; }
 }

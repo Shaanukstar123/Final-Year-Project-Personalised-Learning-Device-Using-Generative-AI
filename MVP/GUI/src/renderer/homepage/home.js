@@ -39,11 +39,11 @@ function handleButtonClick(event) {
         .then(response => {
             console.log("Updated topic: ", response.data);
             content = response.data
+            window.location.href = `../storypage/story.html?content=${encodeURIComponent(content)}`;
         })
         .catch(error => console.error('Error updating topic:', error));
     console.log(content);
     // Option 1: Using query parameters
-    window.location.href = `../storypage/story.html?content=${encodeURIComponent(content)}`;
 
     // Option 2: Using local storage
     // localStorage.setItem('storyContent', content);
