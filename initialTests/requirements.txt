@@ -1,2 +1,4 @@
 openai
 scrapy
+flask
+flask-cors

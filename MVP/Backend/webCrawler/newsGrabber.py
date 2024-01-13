@@ -4,6 +4,7 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
 import os
+import json
 
 class CrawlingAgent(CrawlSpider):
     name = "newsRound"

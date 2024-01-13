@@ -6,13 +6,12 @@ function createWindow () {
   const mainWindow = new BrowserWindow({
     webPreferences: {
       webSecurity: false, //remove this after development to avoid security issues
+      nodeIntegration: true, // Enable Node integration
+      contextIsolation: false, // Disable context isolation
+      enableRemoteModule: false, // turn off remote
     },
     width: 480,
     height: 800, //resolution of pi display
-    webPreferences: {
-      preload: path.join(__dirname, 'preload.js'), // or remove if not using
-      nodeIntegration: true
-    }
   });
 
   // Load the index.html of the app (pointing to your new homepage).

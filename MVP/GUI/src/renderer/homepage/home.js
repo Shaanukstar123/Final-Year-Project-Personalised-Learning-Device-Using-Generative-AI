@@ -1,11 +1,18 @@
-function getTopicsFromAPI() {
-    document.addEventListener('DOMContentLoaded', (event) => {
-        const topics = ["Topic1", "Topic2", "Topic3", "Topic4", "Topic5","Topic6","Topic7","Topic8","Topic9","Topic10"];
+const axios = require('axios');
 
-        // Directly call createTopicButtons with the static array
-        createTopicButtons(topics);
+function getTopicsFromAPI() {
+    document.addEventListener('DOMContentLoaded', async () => {
+        console.log("Working");
+        axios.get('http://localhost:5000/get_topics')
+            .then(response => {
+                const topics = response.data.map(item => item.new_title);
+                console.log("Topics: ", topics);
+                createTopicButtons(topics);
+            })
+            .catch(error => console.error('Error fetching topics:', error));
     });
 }
+
 
 function createTopicButtons(topics) {
     const container = document.getElementById('bottom-topics'); // New container ID

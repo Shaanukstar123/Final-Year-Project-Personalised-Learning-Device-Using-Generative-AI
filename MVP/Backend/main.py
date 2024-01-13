@@ -1,10 +1,12 @@
 from flask import Flask, jsonify
+from flask_cors import CORS
 # from threading import Thread
 from webCrawler.newsGrabber import run_crawler
 from articleNamerGPT import generateNewNames
 import json
 
 app = Flask(__name__)
+CORS(app) 
 
 @app.route('/update_news', methods=['GET'])
 def start_crawler():
