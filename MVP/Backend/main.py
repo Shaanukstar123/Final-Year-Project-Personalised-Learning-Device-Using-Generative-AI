@@ -27,6 +27,7 @@ def get_story(id):
         data = json.load(file)
         for article in data:
             if int(article['id']) == int(id):
+                print(int(article['id']))
                 return jsonify(generateStoryWithGPT(article['content']))
         return ("Article not found")
     

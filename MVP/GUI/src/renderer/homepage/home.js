@@ -33,14 +33,15 @@ function createTopicButtons(topics) {
 // }
 
 function handleButtonClick(event) {
-    const content = event.target.dataset.content;
+    var content = event.target.dataset.content;
     //call api with parameter topic id to update content
-    axios.get(`http://localhost:5000/update_topic/${event.target.dataset.id}`)
+    axios.get(`http://localhost:5000/fetch_story/${event.target.dataset.id}`)
         .then(response => {
             console.log("Updated topic: ", response.data);
             content = response.data
         })
         .catch(error => console.error('Error updating topic:', error));
+    console.log(content);
     // Option 1: Using query parameters
     window.location.href = `../storypage/story.html?content=${encodeURIComponent(content)}`;
 
