@@ -658,7 +658,7 @@ video {
 }
 
 /* Container for bottom topics */
-.bottom-topics-container {
+.trending-topics-container {
   display: flex; /* Using flexbox */
   flex-wrap: wrap; /* Allow multiple rows */
   justify-content: center; /* Center items horizontally */
@@ -671,8 +671,9 @@ video {
 }
 
 /* Style for each smaller topic button */
-.bottom-topic-button {
-  background-color: #ddd; /* Example background color */
+.trending-topic-button {
+  opacity: 0.8; /* Slightly transparent */
+  background-color: #f3df2f; /* Example background color */
   color: #333; /* Example text color */
   border-radius: 10px; /* Rounded corners */
   padding: 10px 15px; /* Smaller padding */
@@ -683,7 +684,19 @@ video {
   transition: all 0.3s ease; /* Smooth transition for hover */
 }
 
-.bottom-topic-button:hover {
+.trending-topic-button:hover {
   transform: translateY(-2px); /* Slight raise effect on hover */
   box-shadow: 0 4px 6px rgba(0,0,0,0.15); /* Enhance shadow on hover */
 }
+
+.trending-title {
+  text-align: center; /* Center align text */
+  color: #4afc77; /* Gold color - choose any kid-friendly color */
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); /* Text shadow for depth */
+  margin-top: 30px; /* Space above the title */
+  margin-bottom: 30px; /* Space below the title */
+  font-size: 48px; /* Larger font size */
+  width: 100%; /* Ensure full width for center alignment */
+}
+
+/* Add any additional custom styles here */

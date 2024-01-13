@@ -10,7 +10,8 @@
   "author": "Shaanuka Gunaratne",
   "license": "ISC",
   "devDependencies": {
-    "electron": "^28.1.1"
+    "electron": "^28.1.1",
+    "electron-reload": "^2.0.0-alpha.1"
   },
   "dependencies": {
     "autoprefixer": "^10.4.16",

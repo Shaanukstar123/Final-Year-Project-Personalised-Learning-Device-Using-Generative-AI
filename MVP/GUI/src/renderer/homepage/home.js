@@ -2,12 +2,10 @@ const axios = require('axios');
 
 function getTopicsFromAPI() {
     document.addEventListener('DOMContentLoaded', async () => {
-        console.log("Working");
         axios.get('http://localhost:5000/get_topics')
             .then(response => {
-                const topics = response.data.map(item => item.new_title);
-                console.log("Topics: ", topics);
-                createTopicButtons(topics);
+                console.log("Topics: ", response.data);
+                createTopicButtons(response.data); // Pass the entire topic object array
             })
             .catch(error => console.error('Error fetching topics:', error));
     });
@@ -15,15 +13,25 @@ function getTopicsFromAPI() {
 
 
 function createTopicButtons(topics) {
-    const container = document.getElementById('bottom-topics'); // New container ID
-    // Clear any existing buttons first
-    container.innerHTML = '';
+    const container = document.getElementById('trending-topics');
+    container.innerHTML = ''; // Clear any existing buttons
+
     topics.forEach(topic => {
-      const button = document.createElement('div');
-      button.className = 'bottom-topic-button'; // New class for smaller buttons
-      button.textContent = topic;
-      container.appendChild(button);
+        const button = document.createElement('div');
+        button.className = 'trending-topic-button';
+        button.textContent = topic.new_title;
+        button.dataset.id = topic.id; // Set article ID as a data attribute
+        button.dataset.content = topic.content;
+        button.addEventListener('click', handleButtonClick);
+        container.appendChild(button);
     });
+}
+
+function handleButtonClick(event) {
+    //print topic.content to console
+    console.log(event.target.dataset.content);
+
+
 }
 
 getTopicsFromAPI();

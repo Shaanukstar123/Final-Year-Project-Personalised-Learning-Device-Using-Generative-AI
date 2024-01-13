@@ -1,6 +1,11 @@
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
 
+require('electron-reload')(__dirname, {
+  electron: require(`${__dirname}/../node_modules/electron`)
+});
+
+
 function createWindow () {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -10,8 +15,8 @@ function createWindow () {
       contextIsolation: false, // Disable context isolation
       enableRemoteModule: false, // turn off remote
     },
-    width: 480,
-    height: 800, //resolution of pi display
+    width: 800,
+    height: 1280, //resolution of pi display
   });
 
   // Load the index.html of the app (pointing to your new homepage).

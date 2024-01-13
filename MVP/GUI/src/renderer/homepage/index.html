@@ -7,29 +7,35 @@
     <title>Interactive Educational App</title>
     <link rel="stylesheet" href="../../assets/css/output.css"> <!-- Path to Tailwind CSS -->
 </head>
-<body class="bg-gradient-to-r from-blue-300 to-purple-300 flex justify-center items-center min-h-screen">
-    <script src="home.js"></script>
-    <div class="topics-container ">
-        <!-- First Row of Topics -->
-        <div class="grid grid-cols-2 md:grid-cols-2 gap-4 max-w-4xl">
-            <div class="topic-block history rounded-xl shadow-xl transform hover:scale-105 transition duration-300"></div>
-            <div class="topic-block geography rounded-xl shadow-xl transform hover:scale-105 transition duration-300"></div>
-            
-        </div>
-        <!-- Second Row of Topics -->
-        <div class="grid grid-cols-2 md:grid-cols-2 gap-4 max-w-4xl">
-            <div class="topic-block maths rounded-xl shadow-xl transform hover:scale-105 transition duration-300"></div>
-            <div class="topic-block science rounded-xl shadow-xl transform hover:scale-105 transition duration-300"></div>
-        </div>
-        <!-- Third Row of Topics -->
-        <div class="grid grid-cols-2 md:grid-cols-2 gap-4 max-w-4xl">
-            <div class="topic-block english rounded-xl shadow-xl transform hover:scale-105 transition duration-300"></div>
-            <div class="topic-block music rounded-xl shadow-xl transform hover:scale-105 transition duration-300"></div>
-        </div>
-    </div>
+<body class="bg-gradient-to-r from-blue-300 to-purple-300 min-h-screen">
+    <div class="container mx-auto px-4">
+        <script src="home.js"></script>
+        <div class="topics-container ">
+            <!-- First Row of Topics -->
+            <div class="grid grid-cols-2 md:grid-cols-2 gap-4 max-w-4xl">
+                <div class="topic-block history rounded-xl shadow-xl transform hover:scale-105 transition duration-300"></div>
+                <div class="topic-block geography rounded-xl shadow-xl transform hover:scale-105 transition duration-300"></div>
+                
+            </div>
+            <!-- Second Row of Topics -->
+            <div class="grid grid-cols-2 md:grid-cols-2 gap-4 max-w-4xl">
+                <div class="topic-block maths rounded-xl shadow-xl transform hover:scale-105 transition duration-300"></div>
+                <div class="topic-block science rounded-xl shadow-xl transform hover:scale-105 transition duration-300"></div>
+            </div>
+            <!-- Third Row of Topics -->
+            <div class="grid grid-cols-2 md:grid-cols-2 gap-4 max-w-4xl">
+                <div class="topic-block english rounded-xl shadow-xl transform hover:scale-105 transition duration-300"></div>
+                <div class="topic-block music rounded-xl shadow-xl transform hover:scale-105 transition duration-300"></div>
+            </div>
+        </div> 
 
-        <div id="bottom-topics" class="bottom-topics-container">
+        <div class="text-center mt-8 mb-8">
+            <h2 class="trending-title" style="font-family:'Courier New', Courier, monospace;">Trending</h2>
+        </div>
 
+        <div id="trending-topics" class="trending-topics-container">
+
+        </div>
     </div>
 
 </body>
