@@ -4,6 +4,9 @@ from flask_cors import CORS
 from webCrawler.newsGrabber import run_crawler
 from articleNamerGPT import generateNewNames
 from storyGPT import generateStoryWithGPT
+from imageGenerator import generateImageWithDALLE
+from textSummariser import summarise_text
+
 import json
 
 app = Flask(__name__)
@@ -28,7 +31,10 @@ def get_story(id):
         for article in data:
             if int(article['id']) == int(id):
                 print(int(article['id']))
-                return jsonify(generateStoryWithGPT(article['content']))
+                story = generateStoryWithGPT(article['content'])
+                summarised_story = summarise_text(story)
+                image_url = generateImageWithDALLE("2D cartoon child-friendly image of this story: " + summarised_story)
+                return jsonify({"story": story, "image_url": image_url})
         return ("Article not found")
     
 if __name__ == "__main__":

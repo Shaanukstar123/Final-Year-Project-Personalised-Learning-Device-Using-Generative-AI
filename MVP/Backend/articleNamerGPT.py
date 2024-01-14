@@ -4,18 +4,18 @@ from openai import OpenAI
 import json
 
 client = OpenAI(api_key='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')
-messages = [
-    {"role": "system", "content": "You are a topic chooser for a children's app. "
-     +"Given a list of article names and id, choose the articles that best represent topics around the world that "
-     + "kids should know. Replace the names with a 1 word topic name, and the other names replace with '_' "
-      +"and return in the same format and length. The topics should be very basic but also informative. E.g. Article about National Cinema Day = 'Cinema'. Return list of id: new name"}
-]
+messages = []
+role= {"role": "system", "content": "You are a topic chooser for a children's app. "
+     +"Given a list of article names and id, choose the articles that best represent trending topics around the world that "
+     + "kids would find interesting. Replace the names with a trending topic name and the other names replace with '_'. The name should represent what's trending around the world today relating to this news."
+      +"Return in the same format and length. The topics should be very basic but also informative. E.g. Article about National Cinema Day = 'Cinema'. Return list of id: new name"}
 
 def generateTitleWithGPT(articles):
     dictToString = ""
     for i in articles:
         dictToString += str(i['id']) + ":" + i['name'] + ", "
     messages.append({"role": "user", "content": dictToString})
+    messages.append(role)
     chat = client.chat.completions.create(
             model="gpt-3.5-turbo-1106",
             messages=messages

@@ -33,21 +33,14 @@ function createTopicButtons(topics) {
 // }
 
 function handleButtonClick(event) {
-    var content = event.target.dataset.content;
-    //call api with parameter topic id to update content
-    axios.get(`http://localhost:5000/fetch_story/${event.target.dataset.id}`)
+    const topicId = event.target.dataset.id;
+    axios.get(`http://localhost:5000/fetch_story/${topicId}`)
         .then(response => {
-            console.log("Updated topic: ", response.data);
-            content = response.data
-            window.location.href = `../storypage/story.html?content=${encodeURIComponent(content)}`;
+            const content = response.data.story;
+            const imageUrl = response.data.image_url;
+            window.location.href = `../storypage/story.html?content=${encodeURIComponent(content)}&image=${encodeURIComponent(imageUrl)}`;
         })
-        .catch(error => console.error('Error updating topic:', error));
-    console.log(content);
-    // Option 1: Using query parameters
-
-    // Option 2: Using local storage
-    // localStorage.setItem('storyContent', content);
-    // window.location.href = 'story.html';
+        .catch(error => console.error('Error fetching story and image:', error));
 }
 
 getTopicsFromAPI();

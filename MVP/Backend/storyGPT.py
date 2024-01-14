@@ -4,11 +4,10 @@ import json
 client = OpenAI(api_key='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')
 
 def generateStoryWithGPT(article):
-    messages =[{"role": "system", "content": 
-                "given an article, generate an interactive story based on the article for 4-8 year old children that explains the"
-                 +"topic of the article without the actual details of the article. Mention a summary of the article at the top and say we're"
-                 +"going to make a story about this topic."
-                },{"role": "user", "content": article}]
+    messages =[{"role": "user", "content": article}, {"role": "system", "content": 
+                "Introduce a summary of the article and what has happened in the first paragraph to a 6 year old kid. Then generate a creative story of 5-8 paragraphs based on the article which explains the main"
+                 +"topic of the article which will be given."
+                }]
     chat = client.chat.completions.create(
             model="gpt-3.5-turbo-1106",
             messages=messages

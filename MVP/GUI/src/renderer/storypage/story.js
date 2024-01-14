@@ -1,23 +1,15 @@
 document.addEventListener('DOMContentLoaded', () => {
     const storyContainer = document.getElementById('story-container');
-
-    // Option 1: Retrieve content from query parameters
     const params = new URLSearchParams(window.location.search);
     const content = params.get('content');
+    const imageUrl = params.get('image');
 
-    // Option 2: Retrieve content from local storage
-    // const content = localStorage.getItem('storyContent');
-
-    // Display content with animation
     displayContentWithAnimation(storyContainer, content);
+    displayImage(storyContainer, imageUrl);
 });
 
 function displayContentWithAnimation(container, content) {
-    console.log("Content: ", content);
-    // Split the content into words or characters
-
     const words = content.split('.');
-
     words.forEach((word, index) => {
         const span = document.createElement('span');
         span.textContent = word + '. ';
@@ -25,4 +17,13 @@ function displayContentWithAnimation(container, content) {
         span.style.animation = `fadeIn 0.5s ease forwards ${index * 3}s`;
         container.appendChild(span);
     });
+}
+
+function displayImage(container, imageUrl) {
+    const image = document.createElement('img');
+    image.src = imageUrl;
+    image.style.width = '100%'; // Adjust as needed
+    image.style.height = 'auto';
+    image.style.marginTop = '20px'; // Space above the image
+    container.appendChild(image);
 }

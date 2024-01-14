@@ -702,13 +702,13 @@ video {
   background-image: url('../images/storypage/stainedPaper.jpg');
   font-family: 'Times New Roman', Times, serif;
   font-size: large;
-  height:100vh;
+  height:200vh;
   width:100vw;
 
 }
 .story-container{
   font-family: 'Times New Roman', Times, serif;
-  margin-top: 5vh;
+  margin-top: 0vh;
   margin-left: 5vw;
   margin-right: 5vw;
   margin-bottom: 5vh;
