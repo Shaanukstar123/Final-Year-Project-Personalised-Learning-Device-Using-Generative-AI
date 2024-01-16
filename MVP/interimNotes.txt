@@ -1,0 +1,7 @@
+Interim Report
+
+Quantified analysis of cloud vs local. Stick to Pi 5
+Service: Langchain - reduce costs
+Report: Clear about when you're adding things - System Block Diagram - Architecture - helps see data protection
+Anonymise data going into the cloud
+Literacy Review - Looking at existing products (less weight on non-commercial products)
