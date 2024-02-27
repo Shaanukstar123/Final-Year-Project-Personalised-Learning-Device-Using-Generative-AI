@@ -1,0 +1,42 @@
+{
+  "todo": [],
+  "in-progress": [],
+  "testing": [],
+  "done": [
+    {
+      "category": "Research",
+      "creation_time": "2024-02-11T19:05:03.113Z",
+      "id": "1",
+      "references": [],
+      "title": "Background reseach on similar projects/ideas"
+    },
+    {
+      "category": "InterimReport",
+      "creation_time": "2024-02-11T19:07:19.729Z",
+      "id": "4",
+      "references": [],
+      "title": "Background Writeup"
+    },
+    {
+      "category": "Research",
+      "creation_time": "2024-02-11T19:05:33.868Z",
+      "id": "2",
+      "references": [],
+      "title": "Research Hardware"
+    },
+    {
+      "category": "Research",
+      "creation_time": "2024-02-11T19:05:42.735Z",
+      "id": "3",
+      "references": [],
+      "title": "Research Software"
+    },
+    {
+      "category": "Implementation",
+      "creation_time": "2024-02-11T19:07:55.915Z",
+      "id": "5",
+      "references": [],
+      "title": "MVP"
+    }
+  ]
+}

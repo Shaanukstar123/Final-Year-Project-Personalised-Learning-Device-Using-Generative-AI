@@ -1,0 +1,157 @@
+{
+    "title": "Kanban",
+    "cols": [
+        {
+            "title": "To-Do",
+            "tasks": [
+                {
+                    "text": "Develop voice to text and text to voice systems and integrate into application",
+                    "id": "clshy4ddv00174067wg4acym3"
+                },
+                {
+                    "text": "Add multi-page narratives",
+                    "id": "clshzeah0001c4067ha88tm8j"
+                },
+                {
+                    "text": "Integrate all hardware components",
+                    "id": "clshy3c7800144067h7ztxghr"
+                },
+                {
+                    "text": "Print 3D model in PLA, then test and refine model if necessary.",
+                    "id": "clshwbrwv00114067konzcf7k"
+                },
+                {
+                    "text": "Build a hardware prototype and test the system",
+                    "id": "clshzm1my001d4067myx03sfv"
+                },
+                {
+                    "text": "Add AI generated topics within each subject topic (Science, English, Maths...)",
+                    "id": "clshwevug00134067qxw629bf"
+                },
+                {
+                    "text": "Create a knowledge graph from narrative text",
+                    "id": "clshw3xz0000v4067nnuzblfi"
+                },
+                {
+                    "text": "Create a vector database and store semantic data from stories",
+                    "id": "clshw35i5000u4067gyjn88v7"
+                },
+                {
+                    "text": "Create basic unsupervised learning model",
+                    "id": "clshw1frr000s40672mkviass"
+                },
+                {
+                    "text": "Add impact protection to model and print in TPU",
+                    "id": "clshwbyph00124067ljgfpopa"
+                },
+                {
+                    "text": "Host necessary databases on the cloud and create DBMS",
+                    "id": "clshw58gi000w4067k9p5u12j"
+                },
+                {
+                    "text": "Adapt classification model for identifying user's interests",
+                    "id": "clshw87df000y4067vx48t0f7"
+                },
+                {
+                    "text": "Integrate classificaition model with LLM for improved classification of user's interests ",
+                    "id": "clshwafpv001040677mgr7agh"
+                },
+                {
+                    "text": "Generate alternative types of content with 2-way user interaction",
+                    "id": "clshyrdd700194067et6l004q"
+                },
+                {
+                    "text": "Generate unique content based on user's interests",
+                    "id": "clshyuaka001b4067jwi22p1x"
+                },
+                {
+                    "text": "User testing and feedback",
+                    "id": "clshyszr8001a4067cioknmim"
+                },
+                {
+                    "text": "Final report write-up",
+                    "id": "clshy533v00184067jk9uzvtm"
+                }
+            ],
+            "id": "clshvowwx000c4067lsmhvruk",
+            "color": "#ec9c25"
+        },
+        {
+            "title": "In Progress",
+            "tasks": [
+                {
+                    "text": "Finalise 3D model for printing",
+                    "id": "clshvy8dt000q40675ue9oa9j"
+                },
+                {
+                    "text": "Integrate langchain with custom LLM chains",
+                    "id": "clshvwrog000o4067zdn3td3l"
+                }
+            ],
+            "id": "clshvowwx000d4067f8y66iqi",
+            "color": "#344fa2"
+        },
+        {
+            "title": "Done",
+            "tasks": [
+                {
+                    "text": "Background research on similar projects/ideas",
+                    "id": "clshvowwx000b40671hr4f9rv"
+                },
+                {
+                    "text": "Research hardware and system requirements",
+                    "id": "clshvqoh4000f40674v6wjlec"
+                },
+                {
+                    "text": "Research software components",
+                    "id": "clshvrbdg000g40671jwowzmr"
+                },
+                {
+                    "text": "Interim report background write-up",
+                    "id": "clshvs77n000h406799p7a3km"
+                },
+                {
+                    "text": "Create an MVP and run on Windows OS",
+                    "id": "clshvsokq000i40674b20gwu8"
+                },
+                {
+                    "text": "Assess cost of AI services in MVP and optimise to reduce costs.",
+                    "id": "clshw5p0k000x4067pq0q6q12"
+                },
+                {
+                    "text": "Research and finalise hardware components",
+                    "id": "clshvygo0000r4067e4oj1ik9"
+                },
+                {
+                    "text": "Order hardware components",
+                    "id": "clshvtbz7000j4067ouw2im81"
+                },
+                {
+                    "text": "Create 3D model for housing components",
+                    "id": "clshvxsjx000p4067vcd0v703"
+                },
+                {
+                    "text": "Set-up Raspberry Pi and display module",
+                    "id": "clshvus92000k4067ub9tvdmw"
+                },
+                {
+                    "text": "Run MVP on the Pi and test performance",
+                    "id": "clshvv8re000l4067ntfke7pb"
+                },
+                {
+                    "text": "Interim report implementation write-up",
+                    "id": "clshvvzeq000m4067eudr9ftg"
+                },
+                {
+                    "text": "Complete interim report",
+                    "id": "clshvwc93000n406747n5u6cs"
+                }
+            ],
+            "id": "clshvowwx000e4067nw4vchnb",
+            "color": "#00d084"
+        }
+    ],
+    "autosave": true,
+    "saveToFile": true,
+    "timestamp": 1707706883850
+}

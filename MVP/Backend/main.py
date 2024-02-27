@@ -31,8 +31,11 @@ def get_story(id):
         for article in data:
             if int(article['id']) == int(id):
                 print(int(article['id']))
+                print("Generating Story")
                 story = generateStoryWithGPT(article['content'])
+                print("start summary")
                 summarised_story = summarise_text(story)
+                print("summarised")
                 image_url = generateImageWithDALLE("2D cartoon child-friendly image of this story: " + summarised_story)
                 return jsonify({"story": story, "image_url": image_url})
         return ("Article not found")
