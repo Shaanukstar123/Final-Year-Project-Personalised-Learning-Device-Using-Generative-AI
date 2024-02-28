@@ -1,4 +1,6 @@
 MVP/GUI/node_modules
+App/GUI/node_modules
 initialTests/UI
 **__pycache__**
 **output.json**
+.env
