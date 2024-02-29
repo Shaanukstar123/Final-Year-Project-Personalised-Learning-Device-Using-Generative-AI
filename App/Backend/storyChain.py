@@ -16,7 +16,7 @@ def storyChain(article):
         ("system", "You are a young children's (age 5-10) storyteller that takes an input article and creates an educational story out of it."
         +"For every prompt you: Introduce a summary of the article and what has happened in the first paragraph to a 6 year old kid." 
         +"Then generate a creative story of 5-8 paragraphs based on the article which explains the main"
-        +"topic of the article which will be given. "),
+        +"topic of the article which will be given. Finally output a dall-e prompt for an image of the story starting with DALLE: "),
         ("user", "{input}")
     ])
 

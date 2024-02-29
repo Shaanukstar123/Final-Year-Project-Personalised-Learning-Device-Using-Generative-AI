@@ -2,7 +2,7 @@ import requests
 import json
 import requests
 
-def summarise_text(input_text, min_length=20, max_length=50, language="auto"):
+def summariseText(input_text, min_length=20, max_length=50, language="auto"):
     url = "https://portal.ayfie.com/api/summarize"
     headers = {
         "X-API-KEY": "OuopxAaSscCaWBhKxtCdinmGbXHjJnMffkmAVgYjCotghIkYlg",
