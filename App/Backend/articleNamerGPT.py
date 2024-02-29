@@ -1,36 +1,35 @@
-##These functions summarise articles in one word using the GPT api
-
-from openai import OpenAI
+from langchain_openai import ChatOpenAI
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+import os
 import json
+from dotenv import load_dotenv
 
-client = OpenAI(api_key='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')
-messages = []
-role= {"role": "system", "content": "You are a topic chooser for a children's app. "
-     +"Given a list of article names and id, choose the articles that best represent trending topics around the world that "
-     + "kids would find interesting. Replace the names with a trending topic name and the other names replace with '_'. The name should represent what's trending around the world today relating to this news."
-      +"Return in the same format and length. The topics should be very basic but also informative. E.g. Article about National Cinema Day = 'Cinema'. Return list of id: new name"}
+# Import the necessary LangChain components
+def generateTitleWithLangChain(articles):
+    load_dotenv()
+    llm = ChatOpenAI(openai_api_key=os.getenv("OPENAI_API_KEY"), model="gpt-3.5-turbo-0125")
+    output_parser = StrOutputParser()  # Converts output to string
 
-def generateTitleWithGPT(articles):
+    # Convert article list to a string format acceptable by our prompt
     dictToString = ""
-    for i in articles:
-        dictToString += str(i['id']) + ":" + i['name'] + ", "
-    messages.append({"role": "user", "content": dictToString})
-    messages.append(role)
-    chat = client.chat.completions.create(
-            model="gpt-4-0125-preview",
-            messages=messages
-        )
-    reply = chat.choices[0].message.content
+    for article in articles:
+        dictToString += str(article['id']) + ":" + article['name'] + ", "
 
-    return (reply)
+    # Define the prompt template for topic choosing
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", "You are a topic chooser for a children's app. Given a list of article names and id, choose the articles that best represent trending topics around the world that kids would find interesting. Replace the names with a trending topic name and the other names replace with '_'. The name should represent what's trending around the world today relating to this news. Return in the same format and length. The topics should be very basic but also informative. E.g., Article about National Cinema Day = 'Cinema'. Return list of id: new name"),
+        ("user", dictToString)
+    ])
+
+    # Main Chain
+    chain = prompt | llm | output_parser
+    output = chain.invoke({})
+    return output
 
 def getArticles(dir):
     with open(dir, 'r') as file:
-        ##takes in a list of articles and outputs a dictionary names:content in comma separated format
         articles = json.load(file)
-        nameList = {} #id:name
-        for article in articles:
-            nameList[article['id']] = article['name']
     return articles
 
 def addNewNames(nameList, dir):
@@ -39,27 +38,24 @@ def addNewNames(nameList, dir):
     else:
         nameList = nameList.split(',')
     articleDict = {}
-    for i in nameList:
-        i = i.split(':')
-        if len(i)>1:
-            articleDict[int(i[0])] = i[1]
-    print("New: ",nameList)
-    ##Overwrites the output.json file with the new names. Indexes are the same
+    for item in nameList:
+        if ':' in item:
+            id, new_name = item.split(':')
+            articleDict[int(id)] = new_name.strip()
+
     with open(dir, 'r') as file:
         articles = json.load(file)
-        for id in articleDict:
-            print(id)
-            for article in articles:
-                if article['id'] == id:
-                    article['new_title'] = articleDict[id]
-                    print (article['new_title'])
+        for article in articles:
+            if article['id'] in articleDict:
+                article['new_title'] = articleDict[article['id']]
+
     with open(dir, 'w') as file:
         json.dump(articles, file, indent=2)
 
 def generateNewNames():
     dir = 'data/output.json'
     articles = getArticles(dir)
-    newNames = generateTitleWithGPT(articles)
+    newNames = generateTitleWithLangChain(articles)
     addNewNames(newNames, dir)
 
-generateNewNames()
+#generateNewNames()

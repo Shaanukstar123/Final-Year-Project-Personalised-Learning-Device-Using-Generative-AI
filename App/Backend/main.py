@@ -3,7 +3,7 @@ from flask_cors import CORS
 # from threading import Thread
 from webCrawler.newsGrabber import run_crawler
 from articleNamerGPT import generateNewNames
-from storyGPT import generateStoryWithGPT
+from storyChain import storyChain
 from imageGenerator import generateImageWithDALLE
 from textSummariser import summarise_text
 
@@ -32,7 +32,7 @@ def get_story(id):
             if int(article['id']) == int(id):
                 print(int(article['id']))
                 print("Generating Story")
-                story = generateStoryWithGPT(article['content'])
+                story = storyChain(article['content'])
                 print("start summary")
                 summarised_story = summarise_text(story)
                 print("summarised")

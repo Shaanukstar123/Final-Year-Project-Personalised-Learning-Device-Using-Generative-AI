@@ -1,7 +1,8 @@
 from flask import Flask, jsonify
 from openai import OpenAI
+import os
 
-client = OpenAI(api_key='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')
+client = OpenAI(api_key= os.getenv("OPENAI_API_KEY"))
 
 def generateImageWithDALLE(prompt):
     response = client.images.generate(

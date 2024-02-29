@@ -22,7 +22,6 @@ def storyChain(article):
 
     #Main Chain
     chain = prompt | llm | output_parser
-
     output = chain.invoke({"input": article})
     return output
 
