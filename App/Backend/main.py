@@ -14,6 +14,7 @@ import json
 app = Flask(__name__)
 CORS(app) 
 
+storyChain = initialiseModel()
 '''ROUTES'''
 
 @app.route('/update_news', methods=['GET'])
@@ -63,7 +64,7 @@ def getArticleContent(id):
 def generateImage(text):
     if "DALL-E Prompt:" in text:
         summary = text.split("DALL-E Prompt:")[1]
-        print("DALLE prompt found:")
+        print("DALLE prompt found:", summary)
         return summary
         
     print("No DALLE prompt")
@@ -74,26 +75,26 @@ def generateFirstPage(article, chain):
     # Generate story
     print("Generating story...")
     story = initialiseStory(article, chain)
-    dallePrompt = ""
     print(story)
 
-    generateImage(story, article)
+    dallePrompt = generateImage(story)
     # Generate image
     fullDallePrompt= "2D cartoon child-friendly image with no text of this story: " + dallePrompt
     print("Generating image...")
     image_url = generateImageWithDALLE(fullDallePrompt)
+    story = story.split("DALL-E Prompt:")[0]
     return story, image_url
 
 def generateNextPage(userOutput, chain):
     output = continueStory(chain, userOutput)
-    dallePrompt = generateImage(output)
+    dallePrompt = "2D cartoon child-friendly image with no text of this story: " + generateImage(output)
     image_url = generateImageWithDALLE(dallePrompt)
+    output = output.split("DALL-E Prompt:")[0]
     return output, image_url
 
     
     
 if __name__ == "__main__":
     app.run(debug=True)
-    storyChain = initialiseModel()
 
 

@@ -1,7 +1,7 @@
 from langchain_openai import ChatOpenAI
 from langchain_core.output_parsers import StrOutputParser
 from langchain.memory import ConversationKGMemory
-from langchain import ConversationChain
+from langchain.chains import ConversationChain
 from langchain.prompts import PromptTemplate
 import os
 #import .env file
@@ -15,25 +15,17 @@ def initialiseModel():
     llm = ChatOpenAI(openai_api_key = os.getenv("OPENAI_API_KEY"), model = "gpt-3.5-turbo-0125")
     output_parser = StrOutputParser() #converts output to string
     memory = ConversationKGMemory(llm=llm)
-    template_text = """
-    The following is a storytelling session based on an article, tailored for children aged 5-10. 
-    The story evolves with interactive elements and educational questions, designed to engage the young reader and encourage critical thinking. 
-    Each segment of the story concludes with a question that directs the narrative, followed by a DALL-E prompt for visualizing the story's current events.
 
-    Relevant Information:
-    {history}
+    prompt_text = """
+    You are telling a story based on a news article, tailored for children aged 5-10. Introduce the article first before starting the story.
+    The story will evolve with user interaction as you ask them questions and change the story according to their answers, designed to engage the young reader and encourage critical thinking. 
+    Each segment of the story concludes with 1 question that directs the narrative, followed by a DALL-E prompt for visualizing the story's current events.
 
-    Current Interaction:
-    {input}
-
-    Generated Question:
-    {question}
-
-    DALL-E Prompt:
-    {dalle_prompt}
+    History: {history}
+    Input: {input}
     """
 
-    prompt = PromptTemplate(input_variables=["history", "input", "question", "dalle_prompt"], template=template_text)
+    prompt = PromptTemplate(input_variables=["input"], template=prompt_text)
     #story chain with llm, prompt and memory with output parser as string
     storyChain = ConversationChain(llm=llm, prompt=prompt, memory=memory, output_parser=output_parser)
     #storyChain = ConversationChain(llm=llm, prompt=prompt, memory=memory)
