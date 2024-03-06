@@ -1,16 +1,28 @@
-from langchain_openai import ChatOpenAI
-from langchain_core.prompts import ChatPromptTemplate
+from langchain_openai import AzureChatOpenAI  # Adjust based on actual import paths
 from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate
 import os
 import json
 from dotenv import load_dotenv
 
+
 # Import the necessary LangChain components
+
+def initialiseAzureModel():
+    load_dotenv()
+    llm = AzureChatOpenAI(
+        api_version=os.getenv("OPENAI_API_VERSION"),
+        api_key=os.getenv("AZURE_API_KEY"),
+        azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+        azure_deployment="StoryGPT3"
+    )
+    output_parser = StrOutputParser()  # Converts output to string
+    return llm, output_parser
+
 def generateTitleWithLangChain(articles):
     load_dotenv()
 
-    llm = ChatOpenAI(openai_api_key=os.getenv("OPENAI_API_KEY"), model="gpt-3.5-turbo-0125")
-    output_parser = StrOutputParser()  # Converts output to string
+    llm, output_parser = initialiseAzureModel()
 
     # Convert article list to a string format acceptable by our prompt
     dictToString = ""

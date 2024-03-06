@@ -12,12 +12,14 @@ from dotenv import load_dotenv
 
 def initialiseModel():
     load_dotenv()
-    # os.environ["OPENAI_API_VERSION"] = os.getenv("OPENAI_API_VERSION")
-    # os.environ["AZURE_OPENAI_ENDPOINT"] = os.getenv("AZURE_OPENAI_ENDPOINT")
-    # os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
     
-    llm = AzureChatOpenAI(openai_api_version = os.getenv("OPENAI_API_VERSION"), openai_api_key = os.getenv("OPENAI_API_KEY"),
-                           openai_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT"))
+    llm = AzureChatOpenAI(
+        api_version = os.getenv("OPENAI_API_VERSION"), 
+        api_key = os.getenv("AZURE_API_KEY"),
+        azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT"),
+        azure_deployment="StoryGPT3"
+    )
+                        
     #llm = ChatOpenAI(openai_api_key = os.getenv("OPENAI_API_KEY"), model = "gpt-3.5-turbo-0125")
     output_parser = StrOutputParser() #converts output to string
     memory = ConversationKGMemory(llm=llm)
