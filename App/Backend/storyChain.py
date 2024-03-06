@@ -19,7 +19,7 @@ def initialiseModel():
     prompt_text = """
     You are telling a story based on a news article, tailored for children aged 5-10. Introduce the article first before starting the story.
     The story will evolve with user interaction as you ask them questions and change the story according to their answers, designed to engage the young reader and encourage critical thinking. 
-    Each segment of the story concludes with 1 question that directs the narrative, followed by a DALL-E prompt for visualizing the story's current events.
+    Each segment of the story concludes with 1 question that directs the narrative, followed by a DALL-E prompt for visualizing the story's current events beginning with "DALL-E Prompt:".
 
     History: {history}
     Input: {input}

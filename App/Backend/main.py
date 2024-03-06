@@ -8,6 +8,7 @@ from imageGenerator import generateImageWithDALLE
 from textSummariser import summariseText
 import concurrent.futures
 from flask import request
+import re
 
 import json
 
@@ -40,8 +41,8 @@ def get_story(id):
             return jsonify({"error": "Article not found"}), 404
         
         
-@app.route('/continue_story/<id>', methods=['POST'])
-def continue_story(id):
+@app.route('/continue_story/', methods=['POST'])
+def continue_story():
     # Extract user input from the request
     user_input = request.json.get('user_input', '')
     # Continue the story
@@ -62,11 +63,11 @@ def getArticleContent(id):
 
     
 def generateImage(text):
-    if "DALL-E Prompt:" in text:
-        summary = text.split("DALL-E Prompt:")[1]
-        print("DALLE prompt found:", summary)
-        return summary
-        
+    # Check if DALLE prompt is already in the text regardless of case sensitivity in any part of the string
+    if re.search(r"dall-e prompt:", text, flags=re.IGNORECASE):
+        print("DALLE prompt already exists in text")
+        return re.split(r"dall-e prompt:", text, flags=re.IGNORECASE)[1]
+    
     print("No DALLE prompt")
     dallePrompt = summariseText(text)
     return dallePrompt
@@ -82,7 +83,7 @@ def generateFirstPage(article, chain):
     fullDallePrompt= "2D cartoon child-friendly image with no text of this story: " + dallePrompt
     print("Generating image...")
     image_url = generateImageWithDALLE(fullDallePrompt)
-    story = story.split("DALL-E Prompt:")[0]
+    story = re.split(r"dall-e prompt:", story, flags=re.IGNORECASE)[0]
     return story, image_url
 
 def generateNextPage(userOutput, chain):

@@ -16,6 +16,7 @@
   "dependencies": {
     "autoprefixer": "^10.4.16",
     "axios": "^1.6.5",
+    "hammerjs": "^2.0.8",
     "node": "^21.2.0",
     "postcss": "^8.4.33",
     "postcss-cli": "^11.0.0",
