@@ -1,8 +1,9 @@
 from langchain_openai import ChatOpenAI
+from langchain_openai import AzureChatOpenAI
 from langchain_core.output_parsers import StrOutputParser
 from langchain.memory import ConversationKGMemory
 from langchain.chains import ConversationChain
-from langchain.prompts import PromptTemplate
+from langchain.prompts.prompt import PromptTemplate
 import os
 #import .env file
 from dotenv import load_dotenv
@@ -11,47 +12,62 @@ from dotenv import load_dotenv
 
 def initialiseModel():
     load_dotenv()
-    #get key from .env
-    llm = ChatOpenAI(openai_api_key = os.getenv("OPENAI_API_KEY"), model = "gpt-3.5-turbo-0125")
+    # os.environ["OPENAI_API_VERSION"] = os.getenv("OPENAI_API_VERSION")
+    # os.environ["AZURE_OPENAI_ENDPOINT"] = os.getenv("AZURE_OPENAI_ENDPOINT")
+    # os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
+    
+    llm = AzureChatOpenAI(openai_api_version = os.getenv("OPENAI_API_VERSION"), openai_api_key = os.getenv("OPENAI_API_KEY"),
+                           openai_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT"))
+    #llm = ChatOpenAI(openai_api_key = os.getenv("OPENAI_API_KEY"), model = "gpt-3.5-turbo-0125")
     output_parser = StrOutputParser() #converts output to string
     memory = ConversationKGMemory(llm=llm)
 
-    prompt_text = """
-    You are telling a story based on a news article, tailored for children aged 5-10. Introduce the article first before starting the story.
+    promptText = """
+    The following is an interactive educational children's story-telling session based on the topic of a given news article. The story is tailored for children aged 5-10. The article will be introduced first before starting the story.
     The story will evolve with user interaction as you ask them questions and change the story according to their answers, designed to engage the young reader and encourage critical thinking. 
-    Each segment of the story concludes with 1 question that directs the narrative, followed by a DALL-E prompt for visualizing the story's current events beginning with "DALL-E Prompt:".
+    Only one page of the story will be generated each time and history of the context will be tracked.
+    Each segment (page) of the story concludes with 1 question that directs the narrative, followed by a DALL-E prompt for visualizing the story's current events beginning with "DALL-E Prompt:".
 
-    History: {history}
+    Chat History: {history}
     Input: {input}
+    Storyteller: 
     """
 
-    prompt = PromptTemplate(input_variables=["input"], template=prompt_text)
+    prompt = PromptTemplate(input_variables=["history", "input"], output_variables=["output"], template=promptText)
     #story chain with llm, prompt and memory with output parser as string
     storyChain = ConversationChain(llm=llm, prompt=prompt, memory=memory, output_parser=output_parser)
     #storyChain = ConversationChain(llm=llm, prompt=prompt, memory=memory)
     return storyChain
 
+def saveToMemory(memory, new_content):
+    # Retrieve existing story history from memory
+    existingHistory = memory.load_memory_variables({"input": "history"})
+    updatedHistory = existingHistory.get("history", "") + " " + new_content
+    
+    # Now save the updated history back into memory
+    memory.save_context({"input": "history"}, {"output": updatedHistory})
+
 def initialiseStory(article, storyChain):
     memory = storyChain.memory
-    #save input article to memory
-    memory.save_context({"input": "Article Summary"}, {"output": article})
-    output = storyChain.predict(input=article)
+    initialContext = "Article Summary: " + article 
+    memory.save_context({"input": "initial"}, {"output": initialContext})
+    output = storyChain.predict(input=initialContext)
     #save the output to memory
-    memory.save_context({"input": "latest"}, {"output": output})
+    memory.save_context({"input": "initial"}, {"output": output})
+    #memory.save_context({"input": "latest"}, {"output": output})
     return output
 
-def continueStory(conversation_chain, user_input):
-    memory = conversation_chain.memory
-    
+def continueStory(storyChain, userInput):
+    memory = storyChain.memory
     # Load current story context from memory
-    story_context = memory.load_memory_variables({"input": "latest"})
+    storyContext = memory.load_memory_variables({"input": "history"})
+    print("Cumulative story context: ",storyContext)
     
+    if storyContext.get("history"):
+        cumulativeInput = f"{storyContext['history']} {userInput}"
+    else:
+        cumulativeInput = userInput
     # Assuming 'predict' or a similar function uses the current context and user input
-    output = conversation_chain.predict(input=user_input, context=story_context)
-    
-    # Update memory with new story part, question, and DALL-E prompt
-    memory.save_context({"input": user_input}, {"output": output["story"]})
-    memory.save_context({"input": "Question"}, {"output": output["question"]})
-    memory.save_context({"input": "DALL-E Prompt"}, {"output": output["dalle_prompt"]})
-    
+    output = storyChain.predict(input=userInput)
+    saveToMemory(memory, output)
     return output

@@ -45,6 +45,7 @@ def get_story(id):
 def continue_story():
     # Extract user input from the request
     user_input = request.json.get('user_input', '')
+    user_input = str(user_input)
     # Continue the story
     output, imageUrl = generateNextPage(user_input, storyChain)
     return jsonify({"story": output, "image_url": imageUrl})
