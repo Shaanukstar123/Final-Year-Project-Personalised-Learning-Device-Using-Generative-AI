@@ -19,20 +19,21 @@ def initialiseModel():
         azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT"),
         azure_deployment="StoryGPT3"
     )
-                        
+
     #llm = ChatOpenAI(openai_api_key = os.getenv("OPENAI_API_KEY"), model = "gpt-3.5-turbo-0125")
     output_parser = StrOutputParser() #converts output to string
     memory = ConversationKGMemory(llm=llm)
 
     promptText = """
-    The following is an interactive educational children's story-telling session based on the topic of a given news article. The story is tailored for children aged 5-10. The article will be introduced first before starting the story.
+    The following is a continuous interactive educational children's story-telling session based on the topic of a given news article. The story is tailored for children aged 5-10. The article will be introduced first before starting the story.
     The story will evolve with user interaction as you ask them questions and change the story according to their answers, designed to engage the young reader and encourage critical thinking. 
     Only one page of the story will be generated each time and history of the context will be tracked.
     Each segment (page) of the story concludes with 1 question that directs the narrative, followed by a DALL-E prompt for visualizing the story's current events beginning with "DALL-E Prompt:".
 
-    Chat History: {history}
-    Input: {input}
-    Storyteller: 
+    "The following continues the story based on previous events:
+    {history}
+    Now, considering what has happened so far, {input}
+    Storyteller: "
     """
 
     prompt = PromptTemplate(input_variables=["history", "input"], output_variables=["output"], template=promptText)
@@ -48,14 +49,16 @@ def saveToMemory(memory, new_content):
     
     # Now save the updated history back into memory
     memory.save_context({"input": "history"}, {"output": updatedHistory})
+    print
 
 def initialiseStory(article, storyChain):
     memory = storyChain.memory
-    initialContext = "Article Summary: " + article 
-    memory.save_context({"input": "initial"}, {"output": initialContext})
+    initialContext = "Article Summary: " + article
+    saveToMemory(memory, initialContext)
     output = storyChain.predict(input=initialContext)
     #save the output to memory
-    memory.save_context({"input": "initial"}, {"output": output})
+    saveToMemory(memory, output)
+    print("Memory: ",memory)
     #memory.save_context({"input": "latest"}, {"output": output})
     return output
 
@@ -64,12 +67,14 @@ def continueStory(storyChain, userInput):
     # Load current story context from memory
     storyContext = memory.load_memory_variables({"input": "history"})
     print("Cumulative story context: ",storyContext)
-    
+    cumulativeInput = ""
     if storyContext.get("history"):
         cumulativeInput = f"{storyContext['history']} {userInput}"
     else:
         cumulativeInput = userInput
     # Assuming 'predict' or a similar function uses the current context and user input
-    output = storyChain.predict(input=userInput)
+    output = storyChain.predict(input=cumulativeInput)
+    print("Output: ",output)
     saveToMemory(memory, output)
+    print("Memory: ",memory)
     return output
