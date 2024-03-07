@@ -1,12 +1,17 @@
 
+const pages = [];
+let currentPageIndex = 0;
 document.addEventListener('DOMContentLoaded', () => {
     const storyContainer = document.getElementById('story-container');
     const params = new URLSearchParams(window.location.search);
     const content = params.get('content');
     const imageUrl = params.get('image');
-
-    displayContentWithAnimation(storyContainer, content);
-    displayImage(storyContainer, imageUrl);
+    if (content && imageUrl) {
+        addPage(content, imageUrl); // This will also automatically display the page
+    }
+    displayPage(currentPageIndex);
+    // displayContentWithAnimation(storyContainer, content);
+    // displayImage(storyContainer, imageUrl);
 
     // Initialize Hammer.js on the storyContainer
 
@@ -37,6 +42,25 @@ function displayImage(container, imageUrl) {
     container.appendChild(image);
 }
 
+function addPage(content, imageUrl) {
+    pages.push({ content, imageUrl });
+    currentPageIndex = pages.length - 1; // Update current page to the latest
+    displayPage(currentPageIndex); // Display the latest page
+}
+
+function displayPage(index) {
+    console.log('Displaying page', index);
+    console.log("Current page content: ", pages[index].content);
+    const storyContainer = document.getElementById('story-container');
+    storyContainer.innerHTML = '';
+
+    if (index >= 0 && index < pages.length) {
+        const { content, imageUrl } = pages[index];
+        displayContentWithAnimation(storyContainer, content);
+        displayImage(storyContainer, imageUrl);
+    }
+}
+
 function initializeSwipeDetection(element) {
     // Create a new instance of Hammer on the element
     const hammer = new Hammer(element);
@@ -44,12 +68,13 @@ function initializeSwipeDetection(element) {
     // Listen for swipeleft events
     hammer.on('swipeleft', function() {
         console.log('Swiped left');
-        fetchNextPage(); // Call your function to fetch the next page of the story
+        goToNextPage(); // Call your function to fetch the next page of the story
     });
 
     // Optionally, listen for swiperight events to go back
     hammer.on('swiperight', function() {
         console.log('Swiped right');
+        goToPreviousPage();
         // Implement or call a function to go back in the story, if applicable
     });
 }
@@ -67,10 +92,28 @@ function fetchNextPage() {
     const user_input = "I don't know you tell me"
     axios.post('http://localhost:5000/continue_story/', { user_input })
         .then(response => {
-            const content = response.data.story;
-            const imageUrl = response.data.image_url;
-            displayContentWithAnimation(storyContainer, content);
-            displayImage(storyContainer, imageUrl);
+            const { story, image_url } = response.data;
+            addPage(story, image_url); // Add new page to pages array
         })
         .catch(error => console.error('Error fetching next page:', error));
+}
+
+function goToPreviousPage() {
+    if (currentPageIndex > 0) {
+        currentPageIndex--;
+        displayPage(currentPageIndex);
+    }
+    else{
+        currentPageIndex = 0;
+    }
+}
+
+function goToNextPage() {
+    if (currentPageIndex < pages.length - 1) {
+        currentPageIndex++;
+        displayPage(currentPageIndex);
+    } else {
+        // If at the last page, fetch next page
+        fetchNextPage();
+    }
 }

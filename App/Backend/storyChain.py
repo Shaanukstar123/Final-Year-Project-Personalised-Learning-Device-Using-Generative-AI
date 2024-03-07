@@ -25,7 +25,7 @@ def initialiseModel():
     output_parser = StrOutputParser() #converts output to string
     memory = ConversationSummaryBufferMemory(llm=llm, max_token_limit= 500)
     promptText = """
-    The following is a continuous interactive educational children's story-telling session based on the topic of a given news article. Generate a page that will continue the story after each
+    The following is a continuous interactive educational children's story-telling session based on the topic of a given news article. Generate around 50 word page that will continue the story after each
     prompt input. User input will determine how the story changes in the current page. Continue the story given the history of chat by the conversational summary buffer memory. Ask an educational question 
     at the end of the page that relates to the story
     and can change the direction of the narrative. 
@@ -52,6 +52,8 @@ def saveToMemory(memory, new_content):
     print
 
 def initialiseStory(article, storyChain):
+    #clear memory
+    storyChain.memory.clear()
     memory = storyChain.memory
     initialContext = "First introduce this news article and then begin the educational story about the subject of the article. Article Summary: " + article
     #saveToMemory(memory, initialContext)
