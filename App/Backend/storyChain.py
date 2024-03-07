@@ -23,7 +23,7 @@ def initialiseModel():
 
     #llm = ChatOpenAI(openai_api_key = os.getenv("OPENAI_API_KEY"), model = "gpt-3.5-turbo-0125")
     output_parser = StrOutputParser() #converts output to string
-    memory = ConversationSummaryBufferMemory(llm=llm)
+    memory = ConversationSummaryBufferMemory(llm=llm, max_token_limit= 500)
     promptText = """
     The following is a continuous interactive educational children's story-telling session based on the topic of a given news article. Generate a page that will continue the story after each
     prompt input. User input will determine how the story changes in the current page. Continue the story given the history of chat by the conversational summary buffer memory. Ask an educational question 
