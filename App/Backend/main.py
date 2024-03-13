@@ -6,11 +6,12 @@ from articleNamerGPT import generateNewNames
 from storyChain import initialiseStory, initialiseModel, continueStory
 from imageGenerator import generateImageWithDALLE
 from textSummariser import summariseText
-import concurrent.futures
 from flask import request
 import re
-
+import os
 import json
+import requests
+
 
 app = Flask(__name__)
 CORS(app) 
@@ -37,6 +38,7 @@ def get_story(id):
         if articleContent:
             story, image_url = generateFirstPage(articleContent,storyChain)
             return jsonify({"story": story, "image_url": image_url})
+            #return jsonify({"story": "Hello hello testing testing", "image_url": "https://contenthub-static.grammarly.com/blog/wp-content/uploads/2020/10/Write-a-Story.jpg"})
         else:
             return jsonify({"error": "Article not found"}), 404
         
@@ -48,8 +50,26 @@ def continue_story():
     user_input = str(user_input)
     # Continue the story
     output, imageUrl = generateNextPage(user_input, storyChain)
+    #return jsonify({"story": "hello hello testing 2 testing 2", "image_url": "https://contenthub-static.grammarly.com/blog/wp-content/uploads/2020/10/Write-a-Story.jpg"})
     return jsonify({"story": output, "image_url": imageUrl})
 
+@app.route('/text-to-speech', methods=['POST'])
+def text_to_speech():
+    voice_id = "onwK4e9ZLuTAKqWW03F9"  # Example: British Daniel
+    url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
+
+    headers = {
+        "Accept": "audio/mpeg",
+        "Content-Type": "application/json",
+        "xi-api-key": os.getenv("ELEVENLABS_API_KEY")
+    }
+    data = request.json
+    response = requests.post(url, json=data, headers=headers)
+
+    if response.status_code == 200:
+        return response.content, response.status_code, {'Content-Type': 'audio/mpeg'}
+    else:
+        return jsonify({"error": "Failed to generate speech"}), response.status_code
 
 
 '''Helper Functions'''

@@ -28,7 +28,7 @@ function displayContentWithAnimation(container, content) {
         const span = document.createElement('span');
         span.textContent = word + '. ';
         span.style.opacity = 0;
-        span.style.animation = `fadeIn 0.5s ease forwards ${index * 3}s`;
+        span.style.animation = `fadeIn 0.3s ease forwards ${index * 3}s`;
         container.appendChild(span);
     });
 }
@@ -43,8 +43,19 @@ function displayImage(container, imageUrl) {
 }
 
 function addPage(content, imageUrl) {
-    pages.push({ content, imageUrl });
+    pages.push({ content, imageUrl, audioUrl: '' });
     currentPageIndex = pages.length - 1; // Update current page to the latest
+
+    fetchAudioForPage(content).then(audioUrl => {
+        // Update the audio URL for the current page
+        pages[currentPageIndex].audioUrl = audioUrl;
+        // Update audio player source if this is the current page being displayed
+        if(currentPageIndex === pages.length - 1) {
+            playAudio(audioUrl);
+            updateAudioButtonVisibility();
+        }
+    });
+
     displayPage(currentPageIndex); // Display the latest page
 }
 
@@ -55,9 +66,13 @@ function displayPage(index) {
     storyContainer.innerHTML = '';
 
     if (index >= 0 && index < pages.length) {
-        const { content, imageUrl } = pages[index];
+        const { content, imageUrl, audioUrl } = pages[index];
         displayContentWithAnimation(storyContainer, content);
         displayImage(storyContainer, imageUrl);
+        updateAudioButtonVisibility();
+        if (audioUrl) {
+            playAudio(audioUrl); // Play the audio if it's available
+        }
     }
 }
 
@@ -117,3 +132,60 @@ function goToNextPage() {
         fetchNextPage();
     }
 }
+
+function fetchAudioForPage(text) {
+    return new Promise((resolve, reject) => {
+        // Assuming this endpoint returns a direct link to the audio file
+        const apiUrl = 'http://localhost:5000/text-to-speech';
+        fetch(apiUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ text })
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.blob();
+        })
+        .then(blob => {
+            const audioUrl = URL.createObjectURL(blob);
+            resolve(audioUrl);
+        })
+        .catch(error => {
+            console.error('There has been a problem with your fetch operation:', error);
+            reject(error);
+        });
+    });
+}
+
+
+function playAudio(audioUrl) {
+    const audioPlayer = document.getElementById('audioPlayer'); // Ensure this element exists in your HTML
+    audioPlayer.src = audioUrl;
+    audioPlayer.play();
+}
+
+function updateAudioButtonVisibility() {
+    const audioButton = document.getElementById('play-audio-button');
+    const audioPlayer = document.getElementById('audioPlayer');
+    if (audioPlayer.src) {
+        audioButton.style.display = 'block'; // Show the button if there's audio
+    } else {
+        audioButton.style.display = 'none'; // Hide the button if there's no audio
+    }
+}
+
+function toggleAudioPlayback() {
+    const audioPlayer = document.getElementById('audioPlayer');
+    if (audioPlayer.src) {
+        if (audioPlayer.paused) {
+            audioPlayer.play();
+        } else {
+            audioPlayer.pause();
+        }
+    } else {
+        console.log('No audio loaded');
+    }
+}
+document.getElementById('play-audio-button').addEventListener('click', toggleAudioPlayback);
