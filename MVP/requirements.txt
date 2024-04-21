@@ -2,3 +2,4 @@ flask
 openai
 scrapy
 flask_cors
+langchain
