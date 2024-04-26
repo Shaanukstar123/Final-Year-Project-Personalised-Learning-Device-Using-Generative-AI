@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request, Response
 from flask_cors import CORS
 # from threading import Thread
 from webCrawler.newsGrabber import run_crawler
@@ -6,7 +6,6 @@ from articleNamerGPT import generateNewNames
 from storyChain import initialiseStory, initialiseModel, continueStory
 from imageGenerator import generateImageWithDALLE
 from textSummariser import summariseText
-from flask import request
 import re
 import os
 import json
@@ -31,27 +30,45 @@ def get_topics():
         data = json.load(file)
         return jsonify(data)
     
+@app.route('/get_image', methods=['POST'])
+def get_image():
+    text_content = request.json.get('text', '')
+    # Assume generateImage returns a URL to an image or saves the image and returns its path
+    dallePrompt = "2D cartoon child-friendly image with no text of this story: " + generateImage(text_content)
+    image_url = generateImageWithDALLE(dallePrompt)
+    return jsonify({'image_url': image_url})
 
 @app.route('/fetch_story/<id>', methods=['GET'])
-def get_story(id):
-        articleContent = getArticleContent(id)
-        if articleContent:
-            story, image_url = generateFirstPage(articleContent,storyChain)
-            return jsonify({"story": story, "image_url": image_url})
-            #return jsonify({"story": "Hello hello testing testing", "image_url": "https://contenthub-static.grammarly.com/blog/wp-content/uploads/2020/10/Write-a-Story.jpg"})
-        else:
-            return jsonify({"error": "Article not found"}), 404
+def fetch_story(id):
+    articleContent = getArticleContent(id)
+    if articleContent:
+        return Response(stream_story(articleContent, storyChain),
+                        mimetype="text/event-stream")
+    else:
+        return jsonify({"error": "Article not found"}), 404
+    
+def stream_story(articleContent, storyChain):
+    story_gen = initialiseStory(articleContent, storyChain)
+    try:
+        for story_part in story_gen:
+            yield f"data: {json.dumps({'story': story_part})}\n\n"
+    except GeneratorExit:
+        print("Stream closed")
         
         
-@app.route('/continue_story/', methods=['POST'])
 def continue_story():
-    # Extract user input from the request
     user_input = request.json.get('user_input', '')
-    user_input = str(user_input)
-    # Continue the story
-    output, imageUrl = generateNextPage(user_input, storyChain)
-    #return jsonify({"story": "hello hello testing 2 testing 2", "image_url": "https://contenthub-static.grammarly.com/blog/wp-content/uploads/2020/10/Write-a-Story.jpg"})
-    return jsonify({"story": output, "image_url": imageUrl})
+    return Response(continue_story_stream(user_input, storyChain),
+                    mimetype="text/event-stream")
+
+def continue_story_stream(user_input, storyChain):
+    story_continuation_gen = continueStory(storyChain, user_input)
+    try:
+        for story_part in story_continuation_gen:
+            yield f"data: {json.dumps({'story': story_part})}\n\n"
+    except GeneratorExit:
+        print("Stream closed")
+
 
 @app.route('/text-to-speech', methods=['POST'])
 def text_to_speech():

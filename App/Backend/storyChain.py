@@ -90,11 +90,17 @@ def continueStory(storyChain, userInput):
     # output = storyChain.predict(input=cumulativeInput)
     prompt = '''This is the user output to the question asked in the previous page of the story (stored in conversatinal buffer memory). Continue the story based on the user's answer with a new page and question at the
     end, or conclude the story if necessary by ending with "THE END". User's answer to previous question:''' + userInput
-    output = storyChain.predict(input=prompt)
-    print("Output: ",output)
+    for output in streamStoryOutput(storyChain.llm, prompt):
+        print("Output: ", output)
+        # Optional: Save to memory if needed
+        # saveToMemory(memory, output)
+        yield output  # Yield each output part as soon as it is available
+
+    # output = storyChain.predict(input=prompt)
+    # print("Output: ",output)
     #saveToMemory(memory, output)
-    print("MemoryContinued: ",memory)
-    return output
+    #print("MemoryContinued: ",memory)
+    #return output
 
 
 if __name__ == "__main__":
@@ -104,3 +110,8 @@ if __name__ == "__main__":
     story_generator = initialiseStory(article, storyChain)
     for output in story_generator:
         print(output.content)
+    input = "I don't know"
+    story_generator = continueStory(storyChain, input)
+    for output in story_generator:
+        print(output.content)
+    
