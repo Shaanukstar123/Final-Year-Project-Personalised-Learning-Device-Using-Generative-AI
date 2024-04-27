@@ -34,13 +34,9 @@ function createTopicButtons(topics) {
 
 function handleButtonClick(event) {
     const topicId = event.target.dataset.id;
-    axios.get(`http://localhost:5000/fetch_story/${topicId}`)
-        .then(response => {
-            const content = response.data.story;
-            const imageUrl = response.data.image_url;
-            window.location.href = `../storypage/story.html?content=${encodeURIComponent(content)}&image=${encodeURIComponent(imageUrl)}`;
-        })
-        .catch(error => console.error('Error fetching story and image:', error));
+    // Redirect to the story page with just the topic ID
+    window.location.href = `../storypage/story.html?topicId=${encodeURIComponent(topicId)}`;
 }
 
 getTopicsFromAPI();
+

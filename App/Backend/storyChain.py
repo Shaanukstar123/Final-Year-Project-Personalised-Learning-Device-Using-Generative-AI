@@ -67,7 +67,7 @@ def initialiseStory(article, storyChain):
     for output in streamStoryOutput(storyChain.llm, initialContext):
         # print("Memory: ",memory)
         # print("TempOutput: ",output)
-        yield output
+        yield output.content
     #saveToMemory(memory, initialContext)
     #output = storyChain.predict(input=initialContext)
     #save the output to memory
@@ -94,7 +94,7 @@ def continueStory(storyChain, userInput):
         print("Output: ", output)
         # Optional: Save to memory if needed
         # saveToMemory(memory, output)
-        yield output  # Yield each output part as soon as it is available
+        yield output.content  # Yield each output part as soon as it is available
 
     # output = storyChain.predict(input=prompt)
     # print("Output: ",output)

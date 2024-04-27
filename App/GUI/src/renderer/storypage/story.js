@@ -4,16 +4,22 @@ let currentPageIndex = 0;
 document.addEventListener('DOMContentLoaded', () => {
     const storyContainer = document.getElementById('story-container');
     const params = new URLSearchParams(window.location.search);
-    const content = params.get('content');
-    const imageUrl = params.get('image');
-    if (content && imageUrl) {
-        addPage(content, imageUrl); // This will also automatically display the page
-    }
-    displayPage(currentPageIndex);
-    // displayContentWithAnimation(storyContainer, content);
-    // displayImage(storyContainer, imageUrl);
+    const topicId = params.get('topicId');
 
-    // Initialize Hammer.js on the storyContainer
+    if (topicId) {
+        const eventSource = new EventSource(`http://localhost:5000/fetch_story/${topicId}`);
+        eventSource.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            displayContentWithAnimation(storyContainer, data.story);
+            // Optionally, trigger image updates only if there's significant new content
+            updateImage(data.story);
+        };
+
+        eventSource.onerror = function() {
+            console.log('Event Source failed');
+            eventSource.close();
+        };
+    }
 
     const nextPageButton = document.getElementById('next-page-button');
     if (nextPageButton) {
@@ -22,58 +28,91 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeSwipeDetection(storyContainer);
 });
 
-function displayContentWithAnimation(container, content) {
-    const words = content.split('.');
-    words.forEach((word, index) => {
+// Existing functions from story.js here...
+
+function updateImage(storyContent) {
+    axios.post('http://localhost:5000/get_image', { text: storyContent })
+        .then(response => {
+            const { image_url } = response.data;
+            pages[currentPageIndex].imageUrl = image_url; // Update current page with the new image URL
+            displayImage(document.getElementById('story-container'), image_url);
+        })
+        .catch(error => console.error('Error fetching image:', error));
+}
+
+// function displayContentWithAnimation(container, content) {
+//     container.innerHTML = ''; // Clear previous content
+//     const words = content.split(' ');
+//     words.forEach((word, index) => {
+//         const span = document.createElement('span');
+//         span.textContent = word + ' ';
+//         span.style.opacity = 0;
+//         // Remove any absolute positioning if present and ensure natural text flow
+//         span.style.position = 'relative';  // Ensure spans are not positioned absolutely
+//         span.style.display = 'inline';     // Display as inline to allow natural flow in text
+//         span.style.animation = `fadeIn 0.3s ease forwards ${index * 0.05}s`;
+//         container.appendChild(span);
+//     });
+// }
+function displayContentWithAnimation(container, contentChunk) {
+    const words = contentChunk.split(' ');
+    words.forEach(word => {
         const span = document.createElement('span');
-        span.textContent = word + '. ';
-        span.style.opacity = 0;
-        span.style.animation = `fadeIn 0.3s ease forwards ${index * 3}s`;
+        span.textContent = word + ' ';
         container.appendChild(span);
     });
 }
 
+
+
 function displayImage(container, imageUrl) {
-    const image = document.createElement('img');
-    image.src = imageUrl;
-    image.style.width = '100%'; // Adjust as needed
-    image.style.height = 'auto';
-    image.style.marginTop = '20px'; // Space above the image
-    container.appendChild(image);
+    const imgElement = document.createElement('img');
+    imgElement.src = imageUrl;
+    imgElement.style.width = '100%';
+    imgElement.style.height = 'auto';
+    imgElement.style.marginTop = '20px';
+    container.appendChild(imgElement);
 }
 
 function addPage(content, imageUrl) {
     pages.push({ content, imageUrl, audioUrl: '' });
-    currentPageIndex = pages.length - 1; // Update current page to the latest
-
+    currentPageIndex = pages.length - 1;
     fetchAudioForPage(content).then(audioUrl => {
-        // Update the audio URL for the current page
         pages[currentPageIndex].audioUrl = audioUrl;
-        // Update audio player source if this is the current page being displayed
-        if(currentPageIndex === pages.length - 1) {
+        if (currentPageIndex === pages.length - 1) {
             playAudio(audioUrl);
             updateAudioButtonVisibility();
         }
     });
-
-    displayPage(currentPageIndex); // Display the latest page
+    displayPage(currentPageIndex);
 }
 
 function displayPage(index) {
-    console.log('Displaying page', index);
-    console.log("Current page content: ", pages[index].content);
     const storyContainer = document.getElementById('story-container');
-    storyContainer.innerHTML = '';
+    storyContainer.innerHTML = ''; // Clear previous content
 
     if (index >= 0 && index < pages.length) {
         const { content, imageUrl, audioUrl } = pages[index];
         displayContentWithAnimation(storyContainer, content);
-        displayImage(storyContainer, imageUrl);
-        updateAudioButtonVisibility();
+        if (imageUrl) {
+            displayImage(storyContainer, imageUrl);
+        }
         if (audioUrl) {
-            playAudio(audioUrl); // Play the audio if it's available
+            playAudio(audioUrl);
         }
     }
+}
+
+function fetchNextPage() {
+    console.log('Fetching next page of the story');
+    const userInput = "User's input here"; // Placeholder for actual user input
+    axios.post('http://localhost:5000/continue_story/', { user_input: userInput })
+        .then(response => {
+            const { story } = response.data;
+            addPage(story, ''); // Add new page to pages array, initially without image
+            updateImage(story); // Fetch and update the image based on the new story part
+        })
+        .catch(error => console.error('Error fetching next page:', error));
 }
 
 function initializeSwipeDetection(element) {
@@ -94,24 +133,7 @@ function initializeSwipeDetection(element) {
     });
 }
 
-function fetchNextPage() {
-    //Post call for the flask backend:@app.route('/continue_story/', methods=['POST'])
-    // def continue_story():
-    // # Extract user input from the request
-    // user_input = request.json.get('user_input', '')
-    // # Continue the story
-    // output, imageUrl = generateNextPage(user_input, storyChain)
-    // return jsonify({"story": output, "image_url": imageUrl})
-    console.log('Fetching next page of the story');
-    const storyContainer = document.getElementById('story-container');
-    const user_input = "I don't know you tell me"
-    axios.post('http://localhost:5000/continue_story/', { user_input })
-        .then(response => {
-            const { story, image_url } = response.data;
-            addPage(story, image_url); // Add new page to pages array
-        })
-        .catch(error => console.error('Error fetching next page:', error));
-}
+
 
 function goToPreviousPage() {
     if (currentPageIndex > 0) {

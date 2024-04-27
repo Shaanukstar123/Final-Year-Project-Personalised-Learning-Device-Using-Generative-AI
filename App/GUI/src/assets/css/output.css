@@ -706,7 +706,7 @@ video {
   width:100vw;
 
 }
-.story-container{
+/* .story-container{
   font-family: 'Times New Roman', Times, serif;
   margin-top: 0vh;
   margin-left: 5vw;
@@ -719,7 +719,20 @@ video {
   font-size: 1.2rem;
   text-align: center;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+} */
+
+span {
+  animation-fill-mode: forwards; /* This ensures that the properties defined in the last keyframe persist after the animation ends */
 }
+
+#story-container {
+  padding: 20px;
+  text-align: justify;
+  font-size: 16px;
+  line-height: 1.5;
+  overflow: auto;  // In case the content is too much to fit in the initial view
+}
+
 
 @keyframes fadeIn {
   to { opacity: 1; }
