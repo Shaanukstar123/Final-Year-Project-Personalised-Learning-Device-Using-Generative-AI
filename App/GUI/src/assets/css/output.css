@@ -735,5 +735,24 @@ span {
 
 
 @keyframes fadeIn {
+  from { opacity: 0; }
   to { opacity: 1; }
+}
+
+/* @keyframes slideIn {
+  from {
+      opacity: 0;
+      transform: translateX(-100%);
+  }
+  to {
+      opacity: 1;
+      transform: translateX(0);
+  }
+} */
+
+#story-container span {
+  display: inline-block; /* Required for transform to work */
+  white-space: pre; /* Preserve whitespace in the text */
+  font-family: 'Comic Sans MS'; /* Apply the Comic Sans MS font */
+  animation: slideIn 0.5s ease forwards; /* Apply the animation to each span */
 }

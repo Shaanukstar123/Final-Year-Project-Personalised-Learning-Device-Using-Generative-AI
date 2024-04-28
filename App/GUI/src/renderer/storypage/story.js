@@ -1,8 +1,10 @@
 
 const pages = [];
 let currentPageIndex = 0;
+let incompleteWord = '';
 document.addEventListener('DOMContentLoaded', () => {
     const storyContainer = document.getElementById('story-container');
+    storyContainer.style.fontFamily = 'Comic Sans MS';
     const params = new URLSearchParams(window.location.search);
     const topicId = params.get('topicId');
 
@@ -40,6 +42,46 @@ function updateImage(storyContent) {
         .catch(error => console.error('Error fetching image:', error));
 }
 
+let cumulativeDelay = 0;
+const wordDisplayInterval = 100; // Interval between words appearing, in milliseconds
+
+function displayContentWithAnimation(container, contentChunk) {
+    // Handle incomplete words from previous chunks
+    contentChunk = incompleteWord + contentChunk;
+    incompleteWord = '';
+
+    // Check if the last character is not a space, indicating a potentially incomplete last word
+    if (contentChunk.slice(-1) !== ' ') {
+        let lastSpaceIndex = contentChunk.lastIndexOf(' ');
+        if (lastSpaceIndex !== -1) {
+            incompleteWord = contentChunk.slice(lastSpaceIndex + 1);
+            contentChunk = contentChunk.slice(0, lastSpaceIndex);
+        } else {
+            incompleteWord = contentChunk; // The whole chunk is an incomplete word
+            return; // Don't display anything yet
+        }
+    }
+
+    // Split the content into words and animate each word
+    const words = contentChunk.split(/\s+/);
+
+    words.forEach(word => {
+        if (word.length > 0) {
+            const span = document.createElement('span');
+            span.textContent = word + ' ';
+            span.style.opacity = 0; // Start invisible
+            span.style.transition = 'opacity 1s ease-in-out';
+            container.appendChild(span);
+
+            setTimeout(() => {
+                span.style.opacity = 1; // Fade in the word
+            }, cumulativeDelay);
+
+            cumulativeDelay += wordDisplayInterval; // Increment delay for the next word
+        }
+    });
+}
+
 // function displayContentWithAnimation(container, content) {
 //     container.innerHTML = ''; // Clear previous content
 //     const words = content.split(' ');
@@ -54,14 +96,14 @@ function updateImage(storyContent) {
 //         container.appendChild(span);
 //     });
 // }
-function displayContentWithAnimation(container, contentChunk) {
-    const words = contentChunk.split(' ');
-    words.forEach(word => {
-        const span = document.createElement('span');
-        span.textContent = word + ' ';
-        container.appendChild(span);
-    });
-}
+// function displayContentWithAnimation(container, contentChunk) {
+//     const words = contentChunk.split(' ');
+//     words.forEach(word => {
+//         const span = document.createElement('span');
+//         span.textContent = word + ' ';
+//         container.appendChild(span);
+//     });
+// }
 
 
 
