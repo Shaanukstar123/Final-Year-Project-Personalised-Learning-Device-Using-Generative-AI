@@ -2,6 +2,8 @@
 const pages = [];
 let currentPageIndex = 0;
 let incompleteWord = '';
+let accumulatedStory = '';
+
 document.addEventListener('DOMContentLoaded', () => {
     const storyContainer = document.getElementById('story-container');
     storyContainer.style.fontFamily = 'Comic Sans MS';
@@ -11,16 +13,17 @@ document.addEventListener('DOMContentLoaded', () => {
     if (topicId) {
         const eventSource = new EventSource(`http://localhost:5000/fetch_story/${topicId}`);
         eventSource.onmessage = function(event) {
-            const data = JSON.parse(event.data);
-            displayContentWithAnimation(storyContainer, data.story);
-            // Optionally, trigger image updates only if there's significant new content
-            updateImage(data.story);
+            console.log('Received:', event.data);
+            // Append data to the container or process it as needed
+            const storyContainer = document.getElementById('story-container');
+            storyContainer.textContent += event.data + ' ';  // Append each word with a space
         };
-
+        
         eventSource.onerror = function() {
             console.log('Event Source failed');
             eventSource.close();
         };
+        
     }
 
     const nextPageButton = document.getElementById('next-page-button');
@@ -33,14 +36,28 @@ document.addEventListener('DOMContentLoaded', () => {
 // Existing functions from story.js here...
 
 function updateImage(storyContent) {
-    axios.post('http://localhost:5000/get_image', { text: storyContent })
-        .then(response => {
-            const { image_url } = response.data;
-            pages[currentPageIndex].imageUrl = image_url; // Update current page with the new image URL
-            displayImage(document.getElementById('story-container'), image_url);
-        })
-        .catch(error => console.error('Error fetching image:', error));
+    // Check if the story content contains a "DALL-E prompt:"
+    const promptRegex = /dall-e prompt:/i; // 'i' flag for case-insensitive matching
+    const promptMatch = storyContent.match(promptRegex);
+
+    if (promptMatch) {
+        // Extract the content after the prompt for image generation
+        const promptIndex = promptMatch.index + promptMatch[0].length;
+        const imageDescription = storyContent.substring(promptIndex).trim();
+
+        // Only proceed with the API call if there's a valid description
+        if (imageDescription.length > 0) {
+            axios.post('http://localhost:5000/get_image', { text: imageDescription })
+                .then(response => {
+                    const { image_url } = response.data;
+                    pages[currentPageIndex].imageUrl = image_url; // Update current page with the new image URL
+                    displayImage(document.getElementById('story-container'), image_url);
+                })
+                .catch(error => console.error('Error fetching image:', error));
+        }
+    }
 }
+
 
 let cumulativeDelay = 0;
 const wordDisplayInterval = 100; // Interval between words appearing, in milliseconds
