@@ -2,14 +2,24 @@ const axios = require('axios');
 
 function getTopicsFromAPI() {
     document.addEventListener('DOMContentLoaded', async () => {
-        axios.get('http://localhost:5000/get_topics')
-            .then(response => {
-                console.log("Topics: ", response.data);
-                createTopicButtons(response.data); // Pass the entire topic object array
-            })
-            .catch(error => console.error('Error fetching topics:', error));
+        // Check if topics data is stored in localStorage
+        const storedTopics = localStorage.getItem('topics');
+        if (storedTopics) {
+            console.log("Using cached topics");
+            createTopicButtons(JSON.parse(storedTopics));
+        } else {
+            axios.get('http://localhost:5000/get_topics')
+                .then(response => {
+                    console.log("Topics: ", response.data);
+                    createTopicButtons(response.data); // Pass the entire topic object array
+                    // Store the topics data in localStorage
+                    localStorage.setItem('topics', JSON.stringify(response.data));
+                })
+                .catch(error => console.error('Error fetching topics:', error));
+        }
     });
 }
+
 
 
 function createTopicButtons(topics) {

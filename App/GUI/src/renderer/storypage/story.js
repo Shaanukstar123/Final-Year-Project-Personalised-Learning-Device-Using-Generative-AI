@@ -25,12 +25,18 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         
     }
+    const backButton = document.getElementById('backButton');
+    if (backButton) {
+        backButton.addEventListener('click', function() {
+            window.location.href = '../homepage/index.html'; // Adjust the path as needed
+        });
+    }
 
     const nextPageButton = document.getElementById('next-page-button');
     if (nextPageButton) {
         nextPageButton.addEventListener('click', fetchNextPage);
     }
-    initializeSwipeDetection(storyContainer);
+    initialiseSwipeDetection(storyContainer);
 });
 
 // Existing functions from story.js here...
@@ -174,24 +180,29 @@ function fetchNextPage() {
         .catch(error => console.error('Error fetching next page:', error));
 }
 
-function initializeSwipeDetection(element) {
-    // Create a new instance of Hammer on the element
+function initialiseSwipeDetection(element) {
+    if (!element) return;
+
     const hammer = new Hammer(element);
+    hammer.get('swipe').set({ direction: Hammer.DIRECTION_HORIZONTAL });
 
-    // Listen for swipeleft events
-    hammer.on('swipeleft', function() {
+    hammer.on('swipeleft', function(ev) {
         console.log('Swiped left');
-        goToNextPage(); // Call your function to fetch the next page of the story
+        ev.preventDefault();  // Prevent the default scroll behavior
+        goToNextPage();
     });
 
-    // Optionally, listen for swiperight events to go back
-    hammer.on('swiperight', function() {
+    hammer.on('swiperight', function(ev) {
         console.log('Swiped right');
+        ev.preventDefault();  // Prevent the default scroll behavior
         goToPreviousPage();
-        // Implement or call a function to go back in the story, if applicable
     });
-}
 
+    // Optionally, prevent touch scrolling on this element
+    element.addEventListener('touchmove', function(e) {
+        e.preventDefault();
+    }, { passive: false });
+}
 
 
 function goToPreviousPage() {
