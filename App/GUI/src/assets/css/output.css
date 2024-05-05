@@ -50,6 +50,7 @@ html,
 body {
   margin: 0; /* 1 */
   line-height: inherit; /* 2 */
+  overflow: hidden; /* Prevents scrolling */
 }
 
 /*
@@ -735,5 +736,61 @@ span {
 
 
 @keyframes fadeIn {
+  from { opacity: 0; }
   to { opacity: 1; }
+}
+
+/* @keyframes slideIn {
+  from {
+      opacity: 0;
+      transform: translateX(-100%);
+  }
+  to {
+      opacity: 1;
+      transform: translateX(0);
+  }
+} */
+
+#story-container span {
+  display: inline-block; /* Required for transform to work */
+  white-space: pre; /* Preserve whitespace in the text */
+  font-family: 'Comic Sans MS'; /* Apply the Comic Sans MS font */
+  animation: slideIn 0.5s ease forwards; /* Apply the animation to each span */
+}
+
+.button-icon {
+  font-size: 16px;
+  padding: 10px 20px;
+  color: white;
+  background-color: #007BFF;
+  border: none;
+  border-radius: 5px;
+  margin: 5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: background-color 0.3s ease;
+}
+
+.button-icon i {
+  margin-right: 8px; /* Space between icon and text */
+}
+
+.button-icon:hover {
+  background-color: #0056b3; /* Darker shade on hover */
+}
+
+.audioPlayer {
+  margin-top: 20px;
+}
+
+@media (max-width: 768px) {
+  .story-container {
+      width: 90%; /* Wider container on smaller screens */
+  }
+
+  .button-icon {
+      padding: 8px 16px; /* Slightly smaller buttons on mobile */
+      font-size: 14px;
+  }
 }

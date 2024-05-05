@@ -51,10 +51,18 @@ def addNewNames(nameList, dir):
     else:
         nameList = nameList.split(',')
     articleDict = {}
-    for item in nameList:
-        if ':' in item:
-            id, new_name = item.split(':')
-            articleDict[int(id)] = new_name.strip()
+    try:
+        for item in nameList:
+            if ':' in item:
+                id, new_name = item.split(':')
+                articleDict[int(id)] = new_name.strip()
+            else:
+                raise ValueError("Incorrectly formatted item: " + item)
+    except ValueError as e:
+        print("Error:", e)
+        print("Reprompting GPT to resend the correct format...")
+        generateNewNames()
+        return
 
     with open(dir, 'r') as file:
         articles = json.load(file)
@@ -64,6 +72,7 @@ def addNewNames(nameList, dir):
 
     with open(dir, 'w') as file:
         json.dump(articles, file, indent=2)
+
 
 def generateNewNames():
     dir = 'data/output.json'

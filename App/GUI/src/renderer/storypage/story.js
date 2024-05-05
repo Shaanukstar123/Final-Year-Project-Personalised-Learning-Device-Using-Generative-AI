@@ -1,43 +1,108 @@
 
 const pages = [];
 let currentPageIndex = 0;
+let incompleteWord = '';
+let accumulatedStory = '';
+
 document.addEventListener('DOMContentLoaded', () => {
     const storyContainer = document.getElementById('story-container');
+    storyContainer.style.fontFamily = 'Comic Sans MS';
     const params = new URLSearchParams(window.location.search);
     const topicId = params.get('topicId');
 
     if (topicId) {
         const eventSource = new EventSource(`http://localhost:5000/fetch_story/${topicId}`);
         eventSource.onmessage = function(event) {
-            const data = JSON.parse(event.data);
-            displayContentWithAnimation(storyContainer, data.story);
-            // Optionally, trigger image updates only if there's significant new content
-            updateImage(data.story);
+            console.log('Received:', event.data);
+            // Append data to the container or process it as needed
+            const storyContainer = document.getElementById('story-container');
+            storyContainer.textContent += event.data + ' ';  // Append each word with a space
         };
-
+        
         eventSource.onerror = function() {
             console.log('Event Source failed');
             eventSource.close();
         };
+        
+    }
+    const homeButton = document.getElementById('homeButton');
+    if (homeButton) {
+        homeButton.addEventListener('click', function() {
+            window.location.href = '../homepage/index.html'; // Adjust the path as needed
+        });
     }
 
     const nextPageButton = document.getElementById('next-page-button');
     if (nextPageButton) {
         nextPageButton.addEventListener('click', fetchNextPage);
     }
-    initializeSwipeDetection(storyContainer);
+    initialiseSwipeDetection(storyContainer);
 });
 
 // Existing functions from story.js here...
 
 function updateImage(storyContent) {
-    axios.post('http://localhost:5000/get_image', { text: storyContent })
-        .then(response => {
-            const { image_url } = response.data;
-            pages[currentPageIndex].imageUrl = image_url; // Update current page with the new image URL
-            displayImage(document.getElementById('story-container'), image_url);
-        })
-        .catch(error => console.error('Error fetching image:', error));
+    // Check if the story content contains a "DALL-E prompt:"
+    const promptRegex = /dall-e prompt:/i; // 'i' flag for case-insensitive matching
+    const promptMatch = storyContent.match(promptRegex);
+
+    if (promptMatch) {
+        // Extract the content after the prompt for image generation
+        const promptIndex = promptMatch.index + promptMatch[0].length;
+        const imageDescription = storyContent.substring(promptIndex).trim();
+
+        // Only proceed with the API call if there's a valid description
+        if (imageDescription.length > 0) {
+            axios.post('http://localhost:5000/get_image', { text: imageDescription })
+                .then(response => {
+                    const { image_url } = response.data;
+                    pages[currentPageIndex].imageUrl = image_url; // Update current page with the new image URL
+                    displayImage(document.getElementById('story-container'), image_url);
+                })
+                .catch(error => console.error('Error fetching image:', error));
+        }
+    }
+}
+
+
+let cumulativeDelay = 0;
+const wordDisplayInterval = 100; // Interval between words appearing, in milliseconds
+
+function displayContentWithAnimation(container, contentChunk) {
+    // Handle incomplete words from previous chunks
+    contentChunk = incompleteWord + contentChunk;
+    incompleteWord = '';
+
+    // Check if the last character is not a space, indicating a potentially incomplete last word
+    if (contentChunk.slice(-1) !== ' ') {
+        let lastSpaceIndex = contentChunk.lastIndexOf(' ');
+        if (lastSpaceIndex !== -1) {
+            incompleteWord = contentChunk.slice(lastSpaceIndex + 1);
+            contentChunk = contentChunk.slice(0, lastSpaceIndex);
+        } else {
+            incompleteWord = contentChunk; // The whole chunk is an incomplete word
+            return; // Don't display anything yet
+        }
+    }
+
+    // Split the content into words and animate each word
+    const words = contentChunk.split(/\s+/);
+
+    words.forEach(word => {
+        if (word.length > 0) {
+            const span = document.createElement('span');
+            span.textContent = word + ' ';
+            span.style.opacity = 0; // Start invisible
+            span.style.transition = 'opacity 1s ease-in-out';
+            container.appendChild(span);
+
+            setTimeout(() => {
+                span.style.opacity = 1; // Fade in the word
+            }, cumulativeDelay);
+
+            cumulativeDelay += wordDisplayInterval; // Increment delay for the next word
+        }
+    });
 }
 
 // function displayContentWithAnimation(container, content) {
@@ -54,14 +119,14 @@ function updateImage(storyContent) {
 //         container.appendChild(span);
 //     });
 // }
-function displayContentWithAnimation(container, contentChunk) {
-    const words = contentChunk.split(' ');
-    words.forEach(word => {
-        const span = document.createElement('span');
-        span.textContent = word + ' ';
-        container.appendChild(span);
-    });
-}
+// function displayContentWithAnimation(container, contentChunk) {
+//     const words = contentChunk.split(' ');
+//     words.forEach(word => {
+//         const span = document.createElement('span');
+//         span.textContent = word + ' ';
+//         container.appendChild(span);
+//     });
+// }
 
 
 
@@ -115,24 +180,29 @@ function fetchNextPage() {
         .catch(error => console.error('Error fetching next page:', error));
 }
 
-function initializeSwipeDetection(element) {
-    // Create a new instance of Hammer on the element
+function initialiseSwipeDetection(element) {
+    if (!element) return;
+
     const hammer = new Hammer(element);
+    hammer.get('swipe').set({ direction: Hammer.DIRECTION_HORIZONTAL });
 
-    // Listen for swipeleft events
-    hammer.on('swipeleft', function() {
+    hammer.on('swipeleft', function(ev) {
         console.log('Swiped left');
-        goToNextPage(); // Call your function to fetch the next page of the story
+        ev.preventDefault();  // Prevent the default scroll behavior
+        goToNextPage();
     });
 
-    // Optionally, listen for swiperight events to go back
-    hammer.on('swiperight', function() {
+    hammer.on('swiperight', function(ev) {
         console.log('Swiped right');
+        ev.preventDefault();  // Prevent the default scroll behavior
         goToPreviousPage();
-        // Implement or call a function to go back in the story, if applicable
     });
-}
 
+    // Optionally, prevent touch scrolling on this element
+    element.addEventListener('touchmove', function(e) {
+        e.preventDefault();
+    }, { passive: false });
+}
 
 
 function goToPreviousPage() {
