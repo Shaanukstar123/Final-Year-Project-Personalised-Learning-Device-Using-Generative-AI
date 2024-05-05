@@ -25,9 +25,9 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         
     }
-    const backButton = document.getElementById('backButton');
-    if (backButton) {
-        backButton.addEventListener('click', function() {
+    const homeButton = document.getElementById('homeButton');
+    if (homeButton) {
+        homeButton.addEventListener('click', function() {
             window.location.href = '../homepage/index.html'; // Adjust the path as needed
         });
     }

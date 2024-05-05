@@ -757,3 +757,40 @@ span {
   font-family: 'Comic Sans MS'; /* Apply the Comic Sans MS font */
   animation: slideIn 0.5s ease forwards; /* Apply the animation to each span */
 }
+
+.button-icon {
+  font-size: 16px;
+  padding: 10px 20px;
+  color: white;
+  background-color: #007BFF;
+  border: none;
+  border-radius: 5px;
+  margin: 5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: background-color 0.3s ease;
+}
+
+.button-icon i {
+  margin-right: 8px; /* Space between icon and text */
+}
+
+.button-icon:hover {
+  background-color: #0056b3; /* Darker shade on hover */
+}
+
+.audioPlayer {
+  margin-top: 20px;
+}
+
+@media (max-width: 768px) {
+  .story-container {
+      width: 90%; /* Wider container on smaller screens */
+  }
+
+  .button-icon {
+      padding: 8px 16px; /* Slightly smaller buttons on mobile */
+      font-size: 14px;
+  }
+}
