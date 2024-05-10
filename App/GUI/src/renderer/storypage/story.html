@@ -2,18 +2,17 @@
 <html lang="en">
 <head>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Story Page</title>
-    <link rel="stylesheet" href="../../assets/css/output.css"> <!-- Link to your CSS for styling -->
+    <link rel="stylesheet" href="../../assets/css/output.css">
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
 </head>
 <body>
     <div class="story-page">
         <div class="story-container" id="story-container"></div>
-        <audio id="audioPlayer" controls hidden></audio> <!-- Add the audio element here -->
+        <audio id="audioPlayer" controls hidden></audio>
         <button id="play-audio-button" class="button-icon" aria-label="Play audio">
             <i class="fas fa-volume-up"></i>
         </button>        
@@ -23,8 +22,15 @@
         <button id="homeButton" class="button-icon">
             <i class="fas fa-home"></i>
         </button>
-
+        <!-- Speech Recognition Button and Display Area -->
+        <button id="speak" class="button-icon">
+            <i class="fas fa-microphone"></i> Speak
+        </button>
+        <p id="textarea">Text will appear here...</p>
     </div>
-    <script src="story.js"></script>
+    <script type="module" src="story.js"></script>
+    <script type="module" src="speechRecognition.js"></script>
+    
+    
 </body>
 </html>

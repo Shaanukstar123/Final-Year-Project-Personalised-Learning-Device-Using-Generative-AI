@@ -1,3 +1,4 @@
+import {Microphone} from './speechRecognition.js';
 
 const pages = [];
 let currentPageIndex = 0;
@@ -9,6 +10,36 @@ document.addEventListener('DOMContentLoaded', () => {
     storyContainer.style.fontFamily = 'Comic Sans MS';
     const params = new URLSearchParams(window.location.search);
     const topicId = params.get('topicId');
+    const speakButton = document.getElementById("speak");
+    const textarea = document.getElementById("textarea");
+    let microphone = new Microphone();
+    let isRecording = false;
+
+
+// Speech to Text Code:
+
+    speakButton.addEventListener('click', async () => {
+        if (!isRecording) {
+            // Start recording
+            textarea.innerHTML = "Listening...";
+            await microphone.requestPermission();
+            await microphone.startRecording(updateTranscript);
+            isRecording = true;
+            speakButton.classList.add('active'); // Optional: Visual feedback
+        } else {
+            // Stop recording
+            microphone.stopRecording();
+            textarea.innerHTML += " (stopped)";
+            isRecording = false;
+            speakButton.classList.remove('active'); // Optional: Visual feedback
+        }
+    });
+
+    function updateTranscript(transcript) {
+        // This function will be called by the Microphone class or similar functionality
+        textarea.innerHTML = transcript;
+    }
+/// Speech to Text ^^^^ \\\\\\\\\\\\\\\\\\\\\\\\\\\
 
     if (topicId) {
         const eventSource = new EventSource(`http://localhost:5000/fetch_story/${topicId}`);

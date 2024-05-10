@@ -794,3 +794,7 @@ span {
       font-size: 14px;
   }
 }
+
+.button-icon.active {
+  background-color: #ff6347; /* Highlight color when active */
+}
