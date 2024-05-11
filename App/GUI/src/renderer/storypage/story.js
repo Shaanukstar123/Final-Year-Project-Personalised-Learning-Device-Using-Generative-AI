@@ -4,6 +4,7 @@ const pages = [];
 let currentPageIndex = 0;
 let incompleteWord = '';
 let accumulatedStory = '';
+let ws = null;  // WebSocket instance
 
 document.addEventListener('DOMContentLoaded', () => {
     const storyContainer = document.getElementById('story-container');
@@ -12,33 +13,37 @@ document.addEventListener('DOMContentLoaded', () => {
     const topicId = params.get('topicId');
     const speakButton = document.getElementById("speak");
     const textarea = document.getElementById("textarea");
-    let microphone = new Microphone();
     let isRecording = false;
-
-
-// Speech to Text Code:
+    let microphone = null;
 
     speakButton.addEventListener('click', async () => {
         if (!isRecording) {
-            // Start recording
             textarea.innerHTML = "Listening...";
-            await microphone.requestPermission();
-            await microphone.startRecording(updateTranscript);
-            isRecording = true;
-            speakButton.classList.add('active'); // Optional: Visual feedback
+            try {
+                // Establish WebSocket and start recording
+                microphone = await setupWebSocketAndMicrophone();
+                if (microphone) {
+                    isRecording = true;  // Update recording state
+                } else {
+                    throw new Error("Failed to initialize microphone");
+                }
+            } catch (error) {
+                textarea.innerHTML = "Failed to start transcription. Check console for errors.";
+                console.error(error);
+            }
         } else {
-            // Stop recording
-            microphone.stopRecording();
+            if (microphone) {
+                microphone.stop();
+                microphone = null;
+            }
+            if (ws) {
+                ws.close();  // Ensure the WebSocket is closed properly
+                ws = null;
+            }
             textarea.innerHTML += " (stopped)";
-            isRecording = false;
-            speakButton.classList.remove('active'); // Optional: Visual feedback
+            isRecording = false;  // Update recording state
         }
     });
-
-    function updateTranscript(transcript) {
-        // This function will be called by the Microphone class or similar functionality
-        textarea.innerHTML = transcript;
-    }
 /// Speech to Text ^^^^ \\\\\\\\\\\\\\\\\\\\\\\\\\\
 
     if (topicId) {
@@ -312,3 +317,49 @@ function toggleAudioPlayback() {
     }
 }
 document.getElementById('play-audio-button').addEventListener('click', toggleAudioPlayback);
+
+// Speech to Text
+async function setupWebSocketAndMicrophone() {
+    const token = await getToken();
+    if (token) {
+        ws = new WebSocket(`wss://api.assemblyai.com/v2/realtime/ws?sample_rate=16000&token=${token}`);
+        return new Promise((resolve, reject) => {
+            ws.onopen = async () => {
+                console.log("WebSocket connection established");
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    const microphone = new Microphone(stream);  // Create a new Microphone instance
+                    resolve(microphone);  // Successfully resolve with the microphone instance
+                } catch (error) {
+                    console.error('Error accessing microphone:', error);
+                    reject(error);  // Reject the promise if microphone setup fails
+                }
+            };
+            ws.onerror = error => {
+                console.error("WebSocket error:", error);
+                reject(error);  // Also reject if there's a WebSocket error
+            };
+            ws.onclose = () => {
+                console.log("WebSocket connection closed");
+            };
+        });
+    } else {
+        throw new Error("Failed to obtain token");
+    }
+}
+
+
+async function getToken() {
+    try {
+        const response = await fetch('http://localhost:5000/get_token');
+        const data = await response.json();
+        if (response.ok) {
+            return data.token;
+        } else {
+            throw new Error(data.error || 'Failed to fetch the token');
+        }
+    } catch (error) {
+        console.error('Token fetch error:', error.message);
+        return null;
+    }
+}
