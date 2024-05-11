@@ -323,21 +323,26 @@ async function setupWebSocketAndMicrophone() {
     const token = await getToken();
     if (token) {
         ws = new WebSocket(`wss://api.assemblyai.com/v2/realtime/ws?sample_rate=16000&token=${token}`);
+        ws.binaryType = 'arraybuffer';
         return new Promise((resolve, reject) => {
             ws.onopen = async () => {
                 console.log("WebSocket connection established");
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    const microphone = new Microphone(stream);  // Create a new Microphone instance
-                    resolve(microphone);  // Successfully resolve with the microphone instance
+                    const microphone = new Microphone(stream, ws);  // Pass WebSocket to Microphone
+                    console.log("Microphone initialized");
+                    resolve(microphone);
                 } catch (error) {
                     console.error('Error accessing microphone:', error);
-                    reject(error);  // Reject the promise if microphone setup fails
+                    reject(error);
                 }
+            };
+            ws.onmessage = event => {
+                console.log("Transcript:", event.data);  // Log the transcription results
             };
             ws.onerror = error => {
                 console.error("WebSocket error:", error);
-                reject(error);  // Also reject if there's a WebSocket error
+                reject(error);
             };
             ws.onclose = () => {
                 console.log("WebSocket connection closed");

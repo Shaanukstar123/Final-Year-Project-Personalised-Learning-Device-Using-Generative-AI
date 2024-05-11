@@ -1,17 +1,29 @@
 export class Microphone {
-    constructor(stream) {
+    constructor(stream, webSocket) {
         this.audioContext = new AudioContext();
         this.stream = stream;
+        this.webSocket = webSocket;
 
-        // Add the module to the Audio Context
         this.audioContext.audioWorklet.addModule('audio-processor.js').then(() => {
+            console.log("Audio processor loaded");
             this.source = this.audioContext.createMediaStreamSource(stream);
             this.workletNode = new AudioWorkletNode(this.audioContext, 'audio-processor');
-
+            console.log("Audio processor node created");
             this.workletNode.port.onmessage = (event) => {
-                // Handle the audio data received from the processor
-                console.log(event.data);  // Or send this data through WebSocket
+                console.log("Received audio data:", event.data);
+                // Assuming the event.data is the raw audio buffer
+                const audioBuffer = event.data;
+                const buffer = audioBuffer.buffer;  // Get the ArrayBuffer from the audio buffer
+                if (this.webSocket && this.webSocket.readyState === WebSocket.OPEN) {
+                    //console.log("Sending audio data:", buffer.byteLength);
+                    this.webSocket.send(event.data);
+                }
+                else {
+                    console.error("WebSocket is not open");
+                }
             };
+            
+            
 
             // Connect everything
             this.source.connect(this.workletNode);
@@ -25,6 +37,9 @@ export class Microphone {
         }
         if (this.audioContext) {
             this.audioContext.close();
+        }
+        if (this.webSocket) {
+            this.webSocket.close();
         }
     }
 }
