@@ -3,32 +3,45 @@ export class Microphone {
         this.audioContext = new AudioContext();
         this.stream = stream;
         this.webSocket = webSocket;
+        this.lastSendTime = performance.now();
 
         this.audioContext.audioWorklet.addModule('audio-processor.js').then(() => {
-            console.log("Audio processor loaded");
             this.source = this.audioContext.createMediaStreamSource(stream);
-            this.workletNode = new AudioWorkletNode(this.audioContext, 'audio-processor');
-            console.log("Audio processor node created");
-            this.workletNode.port.onmessage = (event) => {
-                console.log("Received audio data:", event.data);
-                // Assuming the event.data is the raw audio buffer
-                const audioBuffer = event.data;
-                const buffer = audioBuffer.buffer;  // Get the ArrayBuffer from the audio buffer
-                if (this.webSocket && this.webSocket.readyState === WebSocket.OPEN) {
-                    //console.log("Sending audio data:", buffer.byteLength);
-                    this.webSocket.send(event.data);
-                }
-                else {
-                    console.error("WebSocket is not open");
+            let node = new AudioWorkletNode(this.audioContext, 'audio-processor');
+            node.port.onmessage = (event) => {
+                // Handle the Int16Array buffer here
+                if (webSocket.readyState === WebSocket.OPEN) {
+                    const now = performance.now();
+                    if (now - this.lastSendTime > 300) { 
+                    webSocket.send(new Uint8Array(event.data));
+                    this.lastSendTime = now;
+                    }
                 }
             };
-            
-            
-
-            // Connect everything
-            this.source.connect(this.workletNode);
-            this.workletNode.connect(this.audioContext.destination);
+            this.source.connect(node);
+            node.connect(this.audioContext.destination); // This connection is not always necessary
         });
+
+        // this.audioContext.audioWorklet.addModule('audio-processor.js').then(() => {
+        //     console.log("Audio processor loaded");
+        //     this.source = this.audioContext.createMediaStreamSource(stream);
+        //     this.workletNode = new AudioWorkletNode(this.audioContext, 'audio-processor');
+        //     console.log("Audio processor node created");
+        //     this.workletNode.port.onmessage = (event) => {
+        //         if (this.webSocket && this.webSocket.readyState === WebSocket.OPEN) {
+        //           const now = performance.now();
+        //           if (now - this.lastSendTime > 500) {  // Send data every 300 ms instead
+        //             this.webSocket.send(event.data);
+        //             this.lastSendTime = now;
+        //           }
+        //         }
+        //       };
+              
+
+        //     // Connect everything
+        //     this.source.connect(this.workletNode);
+        //     this.workletNode.connect(this.audioContext.destination);
+        // });
     }
 
     stop() {

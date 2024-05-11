@@ -1,21 +1,27 @@
-const MAX_16BIT_INT = 32767;
 class AudioProcessor extends AudioWorkletProcessor {
-  process(inputs) {
-    const input = inputs[0];
-    const output = inputs[0]; // if you wish to loop back audio to output
-    if (!input) return true;
-    const inputChannel = input[0];
+  constructor() {
+      super();
+      this.sampleRate = 16000; // Make sure this matches the context sample rate
+      this.frameSize = 512; // Number of samples per frame
+      this.buffer = new Int16Array(this.frameSize);
+      this.index = 0;
+  }
 
-    if (inputChannel) {
-      // Convert Float32Array to Int16Array
-      const int16Array = new Int16Array(inputChannel.length);
-      for (let i = 0; i < inputChannel.length; i++) {
-        int16Array[i] = Math.min(1, inputChannel[i]) * 32767;
+  process(inputs) {
+      const input = inputs[0][0]; // Assuming mono input
+      if (input) {
+          for (let i = 0; i < input.length; i++) {
+              // Convert float32 audio data to int16
+              this.buffer[this.index++] = Math.max(-1, Math.min(1, input[i])) * 32767;
+              if (this.index >= this.buffer.length) {
+                  // Send the buffer via port
+                  this.port.postMessage(this.buffer.buffer);
+                  this.index = 0; // Reset the index
+              }
+          }
       }
-      // Post the buffer to the main thread
-      this.port.postMessage(int16Array.buffer);
-    }
-    return true;
+      return true;
   }
 }
+
 registerProcessor('audio-processor', AudioProcessor);
