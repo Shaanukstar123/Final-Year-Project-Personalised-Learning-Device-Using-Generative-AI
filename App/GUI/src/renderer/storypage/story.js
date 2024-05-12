@@ -1,49 +1,106 @@
-import {Microphone} from './speechRecognition.js';
-
+//import assemblyai library:
+const assemblyai = require('assemblyai');
 const pages = [];
 let currentPageIndex = 0;
 let incompleteWord = '';
 let accumulatedStory = '';
 let ws = null;  // WebSocket instance
+const buttonEl = document.getElementById("speak");
+const messageEl = document.getElementById("textarea");
+const titleEl = document.getElementById("titlearea");
+messageEl.style.display = "none";
+let isRecording = false;
+let rt;
+let microphone = null;
 
 document.addEventListener('DOMContentLoaded', () => {
     const storyContainer = document.getElementById('story-container');
     storyContainer.style.fontFamily = 'Comic Sans MS';
     const params = new URLSearchParams(window.location.search);
     const topicId = params.get('topicId');
-    const speakButton = document.getElementById("speak");
-    const textarea = document.getElementById("textarea");
+    const buttonEl = document.getElementById("speak"); // ID corrected for the speak button
+    const messageEl = document.getElementById("textarea"); // ID corrected for the message display area
     let isRecording = false;
-    let microphone = null;
+    buttonEl.addEventListener("click", () => run());
 
-    speakButton.addEventListener('click', async () => {
-        if (!isRecording) {
-            textarea.innerHTML = "Listening...";
-            try {
-                // Establish WebSocket and start recording
-                microphone = await setupWebSocketAndMicrophone();
-                if (microphone) {
-                    isRecording = true;  // Update recording state
-                } else {
-                    throw new Error("Failed to initialize microphone");
-                }
-            } catch (error) {
-                textarea.innerHTML = "Failed to start transcription. Check console for errors.";
-                console.error(error);
-            }
-        } else {
-            if (microphone) {
-                microphone.stop();
-                microphone = null;
-            }
-            if (ws) {
-                ws.close();  // Ensure the WebSocket is closed properly
-                ws = null;
-            }
-            textarea.innerHTML += " (stopped)";
-            isRecording = false;  // Update recording state
-        }
-    });
+    // buttonEl.addEventListener('click', async () => {
+    //     if (!isRecording) {
+    //         messageEl.textContent = "Listening...";
+    //         try {
+    //             microphone = await setupWebSocketAndMicrophone();
+    //             if (microphone) {
+    //                 isRecording = true;  // Update recording state
+    //             } else {
+    //                 throw new Error("Failed to initialize microphone");
+    //             }
+    //         } catch (error) {
+    //             messageEl.textContent = "Failed to start transcription. Check console for errors.";
+    //             console.error(error);
+    //         }
+    //     } else {
+    //         if (microphone) {
+    //             microphone.stopRecording();
+    //             microphone = null;
+    //         }
+    //         messageEl.textContent += " (stopped)";
+    //         isRecording = false;  // Update recording state
+    //     }
+    // });
+
+    // async function run() {
+    //     if (isRecording) {
+    //         if (rt) {
+    //             await rt.close(false);
+    //             rt = null;
+    //         }
+
+    //         if (microphone) {
+    //             microphone.stopRecording();
+    //             microphone = null;
+    //         }
+
+    //         messageEl.style.display = "none";
+    //         titleEl.innerText = "Click start to begin recording!";
+    //     } else {
+    //         microphone = await setupMicrophone();
+    //         if (!microphone) {
+    //             console.error("Failed to initialize microphone");
+    //             return;
+    //         }
+
+    //         messageEl.style.display = "";
+    //         titleEl.innerText = "Click stop to end recording!";
+
+    //         const token = await getToken();
+    //         if (!token) return;
+
+    //         rt = new assemblyai.RealtimeService({ token: token });
+    //         rt.on("transcript", updateTranscription);
+    //         rt.on("error", async (error) => {
+    //             console.error(error);
+    //             await rt.close();
+    //         });
+    //         rt.on("close", () => {
+    //             console.log("Realtime service closed");
+    //             rt = null;
+    //         });
+
+    //         await rt.connect();
+    //         await microphone.startRecording(sendAudioData);
+    //     }
+
+    //     isRecording = !isRecording;
+    //     buttonEl.innerText = isRecording ? "Stop" : "Record";
+    // }
+
+    // function updateTranscription(message) {
+    //     const transcriptDisplay = document.getElementById("transcript");
+    //     transcriptDisplay.textContent += ` ${message.text}`;
+    // }
+
+    // async function sendAudioData(audioData) {
+    //     rt.sendAudio(audioData);
+    // }
 /// Speech to Text ^^^^ \\\\\\\\\\\\\\\\\\\\\\\\\\\
 
     if (topicId) {
@@ -319,39 +376,136 @@ function toggleAudioPlayback() {
 document.getElementById('play-audio-button').addEventListener('click', toggleAudioPlayback);
 
 // Speech to Text
-async function setupWebSocketAndMicrophone() {
-    const token = await getToken();
-    if (token) {
-        ws = new WebSocket(`wss://api.assemblyai.com/v2/realtime/ws?sample_rate=16000&token=${token}`);
-        ws.binaryType = 'arraybuffer';
-        return new Promise((resolve, reject) => {
-            ws.onopen = async () => {
-                console.log("WebSocket connection established");
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    const microphone = new Microphone(stream, ws);  // Pass WebSocket to Microphone
-                    console.log("Microphone initialized");
-                    resolve(microphone);
-                } catch (error) {
-                    console.error('Error accessing microphone:', error);
-                    reject(error);
-                }
-            };
-            ws.onmessage = event => {
-                console.log("Transcript:", event.data);  // Log the transcription results
-            };
-            ws.onerror = error => {
-                console.error("WebSocket error:", error);
-                reject(error);
-            };
-            ws.onclose = () => {
-                console.log("WebSocket connection closed");
-            };
-        });
-    } else {
-        throw new Error("Failed to obtain token");
+
+
+// set initial state of application variables
+
+
+function createMicrophone() {
+  let stream;
+  let audioContext;
+  let audioWorkletNode;
+  let source;
+  let audioBufferQueue = new Int16Array(0);
+  return {
+    async requestPermission() {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    },
+    async startRecording(onAudioCallback) {
+      if (!stream) stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      audioContext = new AudioContext({
+        sampleRate: 16_000,
+        latencyHint: 'balanced'
+      });
+      source = audioContext.createMediaStreamSource(stream);
+
+      await audioContext.audioWorklet.addModule('audio-processor.js');
+      audioWorkletNode = new AudioWorkletNode(audioContext, 'audio-processor');
+
+      source.connect(audioWorkletNode);
+      audioWorkletNode.connect(audioContext.destination);
+      audioWorkletNode.port.onmessage = (event) => {
+        const currentBuffer = new Int16Array(event.data.audio_data);
+        audioBufferQueue = mergeBuffers(
+          audioBufferQueue,
+          currentBuffer
+        );
+
+        const bufferDuration =
+          (audioBufferQueue.length / audioContext.sampleRate) * 1000;
+
+        // wait until we have 100ms of audio data
+        if (bufferDuration >= 100) {
+          const totalSamples = Math.floor(audioContext.sampleRate * 0.1);
+
+          const finalBuffer = new Uint8Array(
+            audioBufferQueue.subarray(0, totalSamples).buffer
+          );
+
+          audioBufferQueue = audioBufferQueue.subarray(totalSamples)
+          if (onAudioCallback) onAudioCallback(finalBuffer);
+        }
+      }
+    },
+    stopRecording() {
+      stream?.getTracks().forEach((track) => track.stop());
+      audioContext?.close();
+      audioBufferQueue = new Int16Array(0);
     }
+  }
 }
+function mergeBuffers(lhs, rhs) {
+  const mergedBuffer = new Int16Array(lhs.length + rhs.length)
+  mergedBuffer.set(lhs, 0)
+  mergedBuffer.set(rhs, lhs.length)
+  return mergedBuffer
+}
+
+// runs real-time transcription and handles global variables
+const run = async () => {
+  if (isRecording) {
+    if (rt) {
+      await rt.close(false);
+      rt = null;
+    }
+
+    if (microphone) {
+      microphone.stopRecording();
+      microphone = null;
+    }
+  } else {
+    microphone = createMicrophone();
+    await microphone.requestPermission();
+
+    const response = await fetch("http://localhost:5000/get_token");
+    const data = await response.json();
+
+    if (data.error) {
+      alert(data.error);
+      return;
+    }
+
+    rt = new assemblyai.RealtimeService({ token: data.token });
+    // handle incoming messages to display transcription to the DOM
+    const texts = {};
+    rt.on("transcript", (message) => {
+      let msg = "";
+      texts[message.audio_start] = message.text;
+      const keys = Object.keys(texts);
+      keys.sort((a, b) => a - b);
+      for (const key of keys) {
+        if (texts[key]) {
+          msg += ` ${texts[key]}`;
+        }
+      }
+      messageEl.innerText = msg;
+    });
+
+    rt.on("error", async (error) => {
+      console.error(error);
+      await rt.close();
+    });
+
+    rt.on("close", (event) => {
+      console.log(event);
+      rt = null;
+    });
+
+    await rt.connect();
+    // once socket is open, begin recording
+    messageEl.style.display = "";
+
+    await microphone.startRecording((audioData) => {
+      rt.sendAudio(audioData);
+    });
+  }
+
+  isRecording = !isRecording;
+  buttonEl.innerText = isRecording ? "Stop" : "Record";
+  titleEl.innerText = isRecording
+    ? "Click stop to end recording!"
+    : "Click start to begin recording!";
+};
 
 
 async function getToken() {
