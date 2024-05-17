@@ -1,0 +1,13 @@
+#Tutorial for power on/off with reed switch (GPIO 3):
+1. login to RPi
+2. sudo cp -p /boot/config.txt /boot/config.txt.bkp
+3. sudo vi /boot/config.txt
+4. append the entry below
+
+#shutdown button
+dtoverlay=gpio-shutdown
+
+5. reboot
+
+https://raw.githubusercontent.com/raspberrypi/firmware/master/boot/overlays/README
+https://www.youtube.com/watch?v=FVbSChcDk8k&list=PLj7DvC81v4pgkRvj_KmegL71Xp-xjKnaS&ab_channel=TheByteman
