@@ -5,6 +5,26 @@ require('electron-reload')(__dirname, {
   electron: require(`${__dirname}/../node_modules/electron`)
 });
 
+function clearCache() {
+  const cachePath = path.join(app.getPath('userData'), 'Local Storage');
+
+  try {
+    if (fs.existsSync(cachePath)) {
+      console.log(`Cache path found: ${cachePath}`);
+      fs.readdirSync(cachePath).forEach((file) => {
+        const filePath = path.join(cachePath, file);
+        console.log(`Deleting file: ${filePath}`);
+        fs.unlinkSync(filePath);
+      });
+      console.log('Cache cleared successfully');
+    } else {
+      console.log('Cache path does not exist');
+    }
+  } catch (error) {
+    console.error('Error clearing cache:', error);
+  }
+}
+
 function createWindow () {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -31,7 +51,11 @@ function createWindow () {
 }
 app.commandLine.appendSwitch('enable-features', 'WebSpeechAPI');
 process.env.GOOGLE_API_KEY = 'AIzaSyDEFZTqFNr512nWLs_l37oJEMQ3_qtEXTQ';
-app.whenReady().then(createWindow);
+
+app.whenReady().then(() => {
+  clearCache();
+  createWindow();
+});
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
