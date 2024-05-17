@@ -5,7 +5,6 @@ require('electron-reload')(__dirname, {
   electron: require(`${__dirname}/../node_modules/electron`)
 });
 
-
 function createWindow () {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -30,7 +29,8 @@ function createWindow () {
   //   mainWindow = null;
   // });
 }
-
+app.commandLine.appendSwitch('enable-features', 'WebSpeechAPI');
+process.env.GOOGLE_API_KEY = 'AIzaSyDEFZTqFNr512nWLs_l37oJEMQ3_qtEXTQ';
 app.whenReady().then(createWindow);
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();

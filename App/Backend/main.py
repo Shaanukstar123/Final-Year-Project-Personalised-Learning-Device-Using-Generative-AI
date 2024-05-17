@@ -6,10 +6,13 @@ from articleNamerGPT import generateNewNames
 from storyChain import initialiseStory, initialiseModel, continueStory
 from imageGenerator import generateImageWithDALLE
 from textSummariser import summariseText
+import assemblyai as aai
+
 import re
 import os
 import json
 import requests
+from dotenv import load_dotenv
 
 
 app = Flask(__name__)
@@ -77,6 +80,30 @@ def continue_story_stream(user_input, storyChain):
     except GeneratorExit:
         print("Stream closed")
 
+
+#Speech to text api token fetcher
+@app.route('/get_token', methods=['GET'])
+def get_token():
+    api_key = os.getenv('ASSEMBLYAI_API_KEY')
+    if not api_key:
+        return jsonify({'error': 'API key not configured'}), 500
+
+    headers = {
+        'authorization': api_key
+    }
+    data = {
+        'expires_in': 3600  # Token valid for 1 hour
+    }
+    response = requests.post(
+        'https://api.assemblyai.com/v2/realtime/token',
+        headers=headers,
+        json=data  # Ensure to send data as JSON
+    )
+
+    if response.status_code == 200:
+        return jsonify(response.json())
+    else:
+        return jsonify({'error': 'Failed to generate token', 'details': response.text}), response.status_code
 
 @app.route('/text-to-speech', methods=['POST'])
 def text_to_speech():
