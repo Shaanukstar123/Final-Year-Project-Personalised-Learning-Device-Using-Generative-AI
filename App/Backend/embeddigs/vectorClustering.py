@@ -1,20 +1,15 @@
 import sqlite3
 import pickle
 import numpy as np
-
 import matplotlib.pyplot as plt
 from sentence_transformers import SentenceTransformer
 from sklearn.cluster import KMeans
 from sklearn.manifold import TSNE
-from rake_nltk import Rake
-from transformers import pipeline
-
 from langchain_openai import AzureChatOpenAI
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain.chains import LLMChain
 from dotenv import load_dotenv
-
 import os
 import warnings
 
@@ -24,11 +19,12 @@ warnings.filterwarnings("ignore", category=UserWarning, module='joblib')
 # Load environment variables
 load_dotenv()
 
-# Function to generate embeddings
-def textToVector(story_text):
+# Function to generate embeddings for each word
+def textToWordVectors(text):
     model = SentenceTransformer('all-MiniLM-L6-v2')
-    embedding = model.encode(story_text)
-    return embedding
+    words = text.split()
+    word_embeddings = [(word, model.encode(word)) for word in words]
+    return word_embeddings
 
 # Function to create a database connection
 def create_connection(db_file):
@@ -39,83 +35,65 @@ def create_connection(db_file):
         print(e)
     return conn
 
-# Function to insert a new vector into the database
-def insert_vector(conn, vector, description=None):
+# Function to insert a new word vector into the database
+def insert_word_vector(conn, word, vector):
     serialized_vector = pickle.dumps(vector)
     create_table_sql = '''
-    CREATE TABLE IF NOT EXISTS embeddings (
+    CREATE TABLE IF NOT EXISTS word_embeddings (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        word TEXT NOT NULL,
         vector BLOB NOT NULL,
-        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-        description TEXT
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
     );
     '''
-    insert_sql = '''INSERT INTO embeddings(vector, description)
+    insert_sql = '''INSERT INTO word_embeddings(word, vector)
                     VALUES(?, ?)'''
 
     cur = conn.cursor()
     cur.execute(create_table_sql)
-    cur.execute(insert_sql, (serialized_vector, description))
+    cur.execute(insert_sql, (word, serialized_vector))
     conn.commit()
+    print(f"Inserted vector for word: {word}")
     return cur.lastrowid
 
-# Function to retrieve a vector by id
-def retrieve_vector(conn, vector_id):
+# Function to retrieve all word vectors from the database
+def retrieve_all_word_vectors(conn):
     cur = conn.cursor()
-    cur.execute("SELECT vector FROM embeddings WHERE id=?", (vector_id,))
-    data = cur.fetchone()
-    if data:
-        return pickle.loads(data[0])
-    return None
-
-# Function to retrieve all vectors from the database
-def retrieve_all_vectors(conn):
-    cur = conn.cursor()
-    cur.execute("SELECT id, vector, description FROM embeddings")
+    cur.execute("SELECT word, vector FROM word_embeddings")
     rows = cur.fetchall()
+    words = [row[0] for row in rows]
     vectors = [pickle.loads(row[1]) for row in rows]
-    descriptions = [row[2] for row in rows]
-    return vectors, descriptions
+    return words, vectors
 
-# Initialize the Azure OpenAI model
-def initialiseAzureModel():
-    llm = AzureChatOpenAI(
-        api_version=os.getenv("OPENAI_API_VERSION"),
-        api_key=os.getenv("AZURE_API_KEY"),
-        azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
-        azure_deployment="StoryGPT3"
-    )
-    output_parser = StrOutputParser()  # Converts output to string
-    return llm, output_parser
-
-# Generate descriptions with LangChain
-def generate_cluster_descriptions(cluster_prompts):
-    llm, output_parser = initialiseAzureModel()
-    descriptions = []
+# Visualization function
+def visualise_word_clusters(words, vectors, cluster_labels):
+    if len(vectors) == 0:
+        print("No vectors to visualize.")
+        return
     
-    for cluster_prompt in cluster_prompts:
-        prompt_template = ChatPromptTemplate.from_messages([
-            ("system", "You are an AI that generates detailed and relevant descriptions for clusters of text. Given a representative sentence, keywords, and a summary, create a comprehensive and contextually accurate description for the cluster."),
-            ("user", cluster_prompt)
-        ])
-        
-        chain = LLMChain(llm=llm, prompt=prompt_template)
-        description = chain.invoke({})
-        descriptions.append(description)
-    
-    return descriptions
-
-def visualise_clusters(vectors, cluster_labels):
     perplexity = min(30, len(vectors) - 1)
+    if perplexity <= 0:
+        print("Not enough samples for t-SNE visualization.")
+        return
+    
     tsne = TSNE(n_components=2, perplexity=perplexity, random_state=42)
     reduced_vectors = tsne.fit_transform(vectors)
     
-    plt.figure(figsize=(10, 8))
-    scatter = plt.scatter(reduced_vectors[:, 0], reduced_vectors[:, 1], c=cluster_labels, cmap='viridis')
-    plt.colorbar(scatter)
-    plt.title("t-SNE Visualization of Clusters")
-    plt.xlabel("t-SNE Component 1")
-    plt.ylabel("t-SNE Component 2")
+    plt.figure(figsize=(12, 8))
+    unique_clusters = set(cluster_labels)
+    
+    for cluster in unique_clusters:
+        indices = [i for i, c in enumerate(cluster_labels) if c == cluster]
+        cluster_points = reduced_vectors[indices]
+        cluster_words = [words[i] for i in indices]
+        
+        plt.scatter(cluster_points[:, 0], cluster_points[:, 1], label=f'Cluster {cluster}')
+        
+        for point, word in zip(cluster_points, cluster_words):
+            plt.text(point[0], point[1], word, fontsize=9)
+    
+    plt.title('t-SNE Visualization of Word Clusters')
+    plt.legend()
     plt.show()
 
 # Main script
@@ -123,69 +101,32 @@ conn = create_connection("vectors.db")
 
 # Example text and embedding insertion
 test = "It's not a flavour you might expect - her choice was haggis and black pepper. Grace wrote to the crisp company's bosses and demanded it returned to the shelves - and she got her wish! But we want to know what your favourite flavour of crisp is. Let us know in the poll further down the page, and if you don't see your top flavour included, drop it in the comments below. You can also let us know if there's a crisp flavour you're desperate to see on the shelves - maybe you'll make it your mission like Grace did? © 2024 BBC. The BBC is not responsible for the content of external sites."
-embedding = textToVector(test)
-vector = np.array(embedding)
-vector_id = insert_vector(conn, vector, "It's not a flavour you might expect - her choice was haggis and black pepper. Grace wrote to the crisp company's bosses and demanded it returned to the shelves - and she got her wish! ...")
 
-# Retrieve all vectors and descriptions
-vectors, descriptions = retrieve_all_vectors(conn)
+# Generate word embeddings
+word_embeddings = textToWordVectors(test)
+
+# Insert word embeddings into the database
+for word, embedding in word_embeddings:
+    insert_word_vector(conn, word, embedding)
+
+# Retrieve all word embeddings
+words, vectors = retrieve_all_word_vectors(conn)
 
 # Ensure unique vectors
 unique_vectors, unique_indices = np.unique(vectors, axis=0, return_index=True)
-unique_descriptions = [descriptions[i] for i in unique_indices]
+unique_words = [words[i] for i in unique_indices]
 
-# Adjust number of clusters
-num_samples = len(unique_vectors)
-num_clusters = min(5, num_samples)
+# Verify that the database is not empty
+if len(unique_vectors) == 0 or len(unique_words) == 0:
+    print("No data found in the database.")
+else:
+    # Adjust number of clusters
+    num_samples = len(unique_vectors)
+    num_clusters = min(5, num_samples)
 
-# Clustering
-clustering_model = KMeans(n_clusters=num_clusters)
-clustering_model.fit(unique_vectors)
-cluster_assignment = clustering_model.labels_
+    # Clustering
+    clustering_model = KMeans(n_clusters=num_clusters)
+    clustering_model.fit(unique_vectors)
+    cluster_assignment = clustering_model.labels_
 
-# Identify representative sentences
-cluster_centers = clustering_model.cluster_centers_
-representative_sentences = []
-
-for i in range(num_clusters):
-    cluster_embeddings = np.array(unique_vectors)[cluster_assignment == i]
-    cluster_descriptions = np.array(unique_descriptions)[cluster_assignment == i]
-    distances = np.linalg.norm(cluster_embeddings - cluster_centers[i], axis=1)
-    if distances.size > 0:
-        closest_index = np.argmin(distances)
-        representative_sentences.append(cluster_descriptions[closest_index])
-
-# Keyword extraction
-r = Rake()
-cluster_keywords = []
-
-for i in range(num_clusters):
-    cluster_descriptions = np.array(unique_descriptions)[cluster_assignment == i]
-    combined_text = " ".join(cluster_descriptions)
-    r.extract_keywords_from_text(combined_text)
-    keywords = r.get_ranked_phrases()[:10]  # Top 10 keywords
-    cluster_keywords.append(", ".join(keywords))
-
-# Summarization
-summarizer = pipeline("summarization", model="sshleifer/distilbart-cnn-12-6")
-
-cluster_summaries = []
-
-for i in range(num_clusters):
-    cluster_descriptions = np.array(unique_descriptions)[cluster_assignment == i]
-    combined_text = " ".join(cluster_descriptions)[:1000]
-    summary = summarizer(combined_text, max_length=50, min_length=25, do_sample=False)
-    cluster_summaries.append(summary[0]['summary_text'])
-
-# Generate cluster descriptions with LangChain
-cluster_prompts = [
-    f"Cluster {i+1} description: Representative Sentence: {representative_sentences[i]}\nKeywords: {cluster_keywords[i]}\nSummary: {cluster_summaries[i]}"
-    for i in range(num_clusters)
-]
-
-cluster_descriptions = generate_cluster_descriptions(cluster_prompts)
-
-for i, description in enumerate(cluster_descriptions):
-    print(f"Cluster {i+1} Description:\n{description}\n")
-
-visualise_clusters(unique_vectors, cluster_assignment)
+    visualise_word_clusters(unique_words, unique_vectors, cluster_assignment)
