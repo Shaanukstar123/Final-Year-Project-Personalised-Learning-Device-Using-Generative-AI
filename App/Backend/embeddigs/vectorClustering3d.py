@@ -1,10 +1,12 @@
+
 import sqlite3
 import pickle
 import numpy as np
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 from sentence_transformers import SentenceTransformer
 from sklearn.cluster import KMeans
-from sklearn.manifold import TSNE3ew
+from sklearn.manifold import TSNE
 from dotenv import load_dotenv
 import warnings
 
@@ -61,20 +63,20 @@ def retrieve_all_word_vectors(conn):
     return words, vectors
 
 # Visualization function
-def visualise_word_clusters(words, vectors, cluster_labels):
+def visualise_word_clusters_3d(words, vectors, cluster_labels):
     if len(vectors) == 0:
         print("No vectors to visualize.")
         return
     
-    perplexity = min(30, len(vectors) - 1)
-    if perplexity <= 0:
-        print("Not enough samples for t-SNE visualization.")
-        return
-    
-    tsne = TSNE(n_components=2, perplexity=perplexity, random_state=42)
+    perplexity = 40  # Try a different value for perplexity
+    learning_rate = 200  # Default learning rate
+    n_iter = 1000  # Number of iterations
+
+    tsne = TSNE(n_components=3, perplexity=perplexity, learning_rate=learning_rate, n_iter=n_iter, random_state=42)
     reduced_vectors = tsne.fit_transform(vectors)
     
-    plt.figure(figsize=(12, 8))
+    fig = plt.figure(figsize=(12, 8))
+    ax = fig.add_subplot(111, projection='3d')
     unique_clusters = set(cluster_labels)
     
     for cluster in unique_clusters:
@@ -82,15 +84,17 @@ def visualise_word_clusters(words, vectors, cluster_labels):
         cluster_points = reduced_vectors[indices]
         cluster_words = [words[i] for i in indices]
         
-        plt.scatter(cluster_points[:, 0], cluster_points[:, 1], label=f'Cluster {cluster}')
+        ax.scatter(cluster_points[:, 0], cluster_points[:, 1], cluster_points[:, 2], label=f'Cluster {cluster}')
         
         for point, word in zip(cluster_points, cluster_words):
-            plt.text(point[0], point[1], word, fontsize=9)
+            ax.text(point[0], point[1], point[2], word, fontsize=9)
     
-    plt.title('t-SNE Visualization of Word Clusters')
+    ax.set_title('t-SNE 3D Visualization of Word Clusters')
+    ax.set_xlabel('t-SNE Component 1')
+    ax.set_ylabel('t-SNE Component 2')
+    ax.set_zlabel('t-SNE Component 3')
     plt.legend()
     plt.show()
-
 # Main script
 conn = create_connection("vectors.db")
 
@@ -124,4 +128,4 @@ else:
     clustering_model.fit(unique_vectors)
     cluster_assignment = clustering_model.labels_
 
-    visualise_word_clusters(unique_words, unique_vectors, cluster_assignment)
+    visualise_word_clusters_3d(unique_words, unique_vectors, cluster_assignment)
