@@ -1,11 +1,14 @@
 import sqlite3
 import pickle
 import numpy as np
-import warnings
+
+import matplotlib.pyplot as plt
 from sentence_transformers import SentenceTransformer
 from sklearn.cluster import KMeans
+from sklearn.manifold import TSNE
 from rake_nltk import Rake
 from transformers import pipeline
+
 from langchain_openai import AzureChatOpenAI
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
@@ -13,6 +16,7 @@ from langchain.chains import LLMChain
 from dotenv import load_dotenv
 
 import os
+import warnings
 
 # Suppress joblib warnings (optional)
 warnings.filterwarnings("ignore", category=UserWarning, module='joblib')
@@ -101,6 +105,19 @@ def generate_cluster_descriptions(cluster_prompts):
     
     return descriptions
 
+def visualise_clusters(vectors, cluster_labels):
+    perplexity = min(30, len(vectors) - 1)
+    tsne = TSNE(n_components=2, perplexity=perplexity, random_state=42)
+    reduced_vectors = tsne.fit_transform(vectors)
+    
+    plt.figure(figsize=(10, 8))
+    scatter = plt.scatter(reduced_vectors[:, 0], reduced_vectors[:, 1], c=cluster_labels, cmap='viridis')
+    plt.colorbar(scatter)
+    plt.title("t-SNE Visualization of Clusters")
+    plt.xlabel("t-SNE Component 1")
+    plt.ylabel("t-SNE Component 2")
+    plt.show()
+
 # Main script
 conn = create_connection("vectors.db")
 
@@ -170,3 +187,5 @@ cluster_descriptions = generate_cluster_descriptions(cluster_prompts)
 
 for i, description in enumerate(cluster_descriptions):
     print(f"Cluster {i+1} Description:\n{description}\n")
+
+visualise_clusters(unique_vectors, cluster_assignment)
