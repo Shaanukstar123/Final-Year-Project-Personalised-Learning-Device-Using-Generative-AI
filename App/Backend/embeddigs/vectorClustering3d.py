@@ -8,6 +8,7 @@ from sentence_transformers import SentenceTransformer
 from sklearn.cluster import KMeans
 from sklearn.manifold import TSNE
 from dotenv import load_dotenv
+from keyWordExtractor import getKeyWords
 import warnings
 
 # Suppress joblib warnings (optional)
@@ -17,9 +18,8 @@ warnings.filterwarnings("ignore", category=UserWarning, module='joblib')
 load_dotenv()
 
 # Function to generate embeddings for each word
-def textToWordVectors(text):
+def textToWordVectors(words):
     model = SentenceTransformer('all-MiniLM-L6-v2')
-    words = text.split()
     word_embeddings = [(word, model.encode(word)) for word in words]
     return word_embeddings
 
@@ -68,7 +68,7 @@ def visualise_word_clusters_3d(words, vectors, cluster_labels):
         print("No vectors to visualize.")
         return
     
-    perplexity = 40  # Try a different value for perplexity
+    perplexity = 5  # Try a different value for perplexity
     learning_rate = 200  # Default learning rate
     n_iter = 1000  # Number of iterations
 
@@ -95,11 +95,37 @@ def visualise_word_clusters_3d(words, vectors, cluster_labels):
     ax.set_zlabel('t-SNE Component 3')
     plt.legend()
     plt.show()
-# Main script
-conn = create_connection("vectors.db")
 
-# Example text and embedding insertion
-#test = "It's not a flavour you might expect - her choice was haggis and black pepper. Grace wrote to the crisp company's bosses and demanded it returned to the shelves - and she got her wish! But we want to know what your favourite flavour of crisp is. Let us know in the poll further down the page, and if you don't see your top flavour included, drop it in the comments below. You can also let us know if there's a crisp flavour you're desperate to see on the shelves - maybe you'll make it your mission like Grace did? © 2024 BBC. The BBC is not responsible for the content of external sites."
+def vectorClustering3d(text):
+    conn = create_connection("vectors.db")
+    word_embeddings = textToWordVectors(text)
+
+    for word, embedding in word_embeddings:
+        insert_word_vector(conn, word, embedding)
+
+    # Retrieve all word embeddings
+    words, vectors = retrieve_all_word_vectors(conn)
+
+    # Ensure unique vectors
+    unique_vectors, unique_indices = np.unique(vectors, axis=0, return_index=True)
+    unique_words = [words[i] for i in unique_indices]
+
+    # Verify that the database is not empty
+    if len(unique_vectors) == 0 or len(unique_words) == 0:
+        print("No data found in the database.")
+    else:
+        # Adjust number of clusters
+        num_samples = len(unique_vectors)
+        num_clusters = min(5, num_samples)
+
+        # Clustering
+        clustering_model = KMeans(n_clusters=num_clusters)
+        clustering_model.fit(unique_vectors)
+        cluster_assignment = clustering_model.labels_
+
+        visualise_word_clusters_3d(unique_words, unique_vectors, cluster_assignment)
+
+
 test = '''
 Once upon a time there was an old mother pig who had three little pigs and not enough food to feed them. So when they were old enough, she sent them out into the world to seek their fortunes.
 
@@ -165,31 +191,21 @@ But this was too much. The wolf danced about with rage and swore he would come d
 So the little piggy put on the cover again, boiled the wolf up, and the three little pigs ate him for supper.
 '''
 
-# Generate word embeddings
-word_embeddings = textToWordVectors(test)
+test2 = '''Once upon a time there lived a poor widow and her son Jack. One day, Jack’s mother told him to sell their only cow. Jack went to the market and on the way he met a man who wanted to buy his cow. Jack asked, “What will you give me in return for my cow?” The man answered, “I will give you five magic beans!” Jack took the magic beans and gave the man the cow. But when he reached home, Jack’s mother was very angry. She said, “You fool! He took away your cow and gave you some beans!” She threw the beans out of the window. Jack was very sad and went to sleep without dinner.
 
-# Insert word embeddings into the database
-for word, embedding in word_embeddings:
-    insert_word_vector(conn, word, embedding)
+The next day, when Jack woke up in the morning and looked out of the window, he saw that a huge beanstalk had grown from his magic beans! He climbed up the beanstalk and reached a kingdom in the sky. There lived a giant and his wife. Jack went inside the house and found the giant’s wife in the kitchen. Jack said, “Could you please give me something to eat? I am so hungry!” The kind wife gave him bread and some milk.
 
-# Retrieve all word embeddings
-words, vectors = retrieve_all_word_vectors(conn)
+While he was eating, the giant came home. The giant was very big and looked very fearsome. Jack was terrified and went and hid inside. The giant cried, “Fee-fi-fo-fum, I smell the blood of an Englishman. Be he alive, or be he dead, I’ll grind his bones to make my bread!” The wife said, “There is no boy in here!” So, the giant ate his food and then went to his room. He took out his sacks of gold coins, counted them and kept them aside. Then he went to sleep. In the night, Jack crept out of his hiding place, took one sack of gold coins and climbed down the beanstalk. At home, he gave the coins to his mother. His mother was very happy and they lived well for sometime.
 
-# Ensure unique vectors
-unique_vectors, unique_indices = np.unique(vectors, axis=0, return_index=True)
-unique_words = [words[i] for i in unique_indices]
+Jack and the Beanstalk Fee Fi Fo Fum!Climbed the beanstalk and went to the giant’s house again. Once again, Jack asked the giant’s wife for food, but while he was eating the giant returned. Jack leapt up in fright and went and hid under the bed. The giant cried, “Fee-fifo-fum, I smell the blood of an Englishman. Be he alive, or be he dead, I’ll grind his bones to make my bread!” The wife said, “There is no boy in here!” The giant ate his food and went to his room. There, he took out a hen. He shouted, “Lay!” and the hen laid a golden egg. When the giant fell asleep, Jack took the hen and climbed down the beanstalk. Jack’s mother was very happy with him.
 
-# Verify that the database is not empty
-if len(unique_vectors) == 0 or len(unique_words) == 0:
-    print("No data found in the database.")
-else:
-    # Adjust number of clusters
-    num_samples = len(unique_vectors)
-    num_clusters = min(5, num_samples)
+After some days, Jack once again climbed the beanstalk and went to the giant’s castle. For the third time, Jack met the giant’s wife and asked for some food. Once again, the giant’s wife gave him bread and milk. But while Jack was eating, the giant came home. “Fee-fi-fo-fum, I smell the blood of an Englishman. Be he alive, or be he dead, I’ll grind his bones to make my bread!” cried the giant. “Don’t be silly! There is no boy in here!” said his wife.
 
-    # Clustering
-    clustering_model = KMeans(n_clusters=num_clusters)
-    clustering_model.fit(unique_vectors)
-    cluster_assignment = clustering_model.labels_
+The giant had a magical harp that could play beautiful songs. While the giant slept, Jack took the harp and was about to leave. Suddenly, the magic harp cried, “Help master! A boy is stealing me!” The giant woke up and saw Jack with the harp. Furious, he ran after Jack. But Jack was too fast for him. He ran down the beanstalk and reached home. The giant followed him down. Jack quickly ran inside his house and fetched an axe. He began to chop the beanstalk. The giant fell and died.
 
-    visualise_word_clusters_3d(unique_words, unique_vectors, cluster_assignment)
+Jack and his mother were now very rich and they lived happily ever after.'''
+
+text1 = getKeyWords(test)
+text2 = getKeyWords(test2)
+text = text1 + text2
+vectorClustering3d(text)

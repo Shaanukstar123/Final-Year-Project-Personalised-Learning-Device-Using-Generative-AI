@@ -19,7 +19,7 @@ def getKeyWords(input_text, top_n=10):
 
     response = requests.post(url, headers=headers, json=data)
     if response.status_code == 200:
-        return response.json()['result']
+        return list(response.json()['result'].keys())
     else:
         return response.json()
 
@@ -91,4 +91,4 @@ But this was too much. The wolf danced about with rage and swore he would come d
 So the little piggy put on the cover again, boiled the wolf up, and the three little pigs ate him for supper.
 '''
 #print(response dict keys one by one)
-print(list(getKeyWords(input_text).keys()))
+print(getKeyWords(input_text))
