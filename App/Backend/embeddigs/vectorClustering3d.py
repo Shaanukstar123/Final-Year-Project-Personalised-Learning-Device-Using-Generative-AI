@@ -9,6 +9,7 @@ from sklearn.cluster import KMeans
 from sklearn.manifold import TSNE
 from dotenv import load_dotenv
 from keyWordExtractor import getKeyWords
+from keyWordExtractor import getLdaTopics
 import warnings
 
 # Suppress joblib warnings (optional)
@@ -205,7 +206,10 @@ The giant had a magical harp that could play beautiful songs. While the giant sl
 
 Jack and his mother were now very rich and they lived happily ever after.'''
 
-text1 = getKeyWords(test)
-text2 = getKeyWords(test2)
-text = text1 + text2
+# text1 = getKeyWords(test)
+# text2 = getKeyWords(test2)
+# text = text1 + text2
+# vectorClustering3d(text)
+text = getLdaTopics(test)
+text = text + getLdaTopics(test2)
 vectorClustering3d(text)
