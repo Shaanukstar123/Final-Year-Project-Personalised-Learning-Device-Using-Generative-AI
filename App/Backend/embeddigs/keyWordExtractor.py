@@ -246,3 +246,4 @@ def getLdaTopics(text):
 # for i, (doc_topics, topic) in enumerate(zip(doc_topic_distr, dominant_topics)):
 #     print(f"Chunk {i} topic distribution: {doc_topics}")
 #     print(f"Chunk {i} is dominated by Topic {topic}")
+print(getLdaTopics(input_text))
