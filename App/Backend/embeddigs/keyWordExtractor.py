@@ -181,7 +181,6 @@ import nltk
 nltk.download('punkt')
 nltk.download('stopwords')
 
-# Preprocessing function to clean text
 def preprocess_text(text):
     text = text.lower()  # Convert to lowercase
     text = re.sub(r'[^\w\s]', '', text)  # Remove punctuation
@@ -194,10 +193,9 @@ def preprocess_text(text):
 def split_text(text, chunk_size=5):
     sentences = sent_tokenize(text)
     chunks = [' '.join(sentences[i:i + chunk_size]) for i in range(0, len(sentences), chunk_size)]
+    # Filter out empty chunks
+    chunks = [chunk for chunk in chunks if chunk.strip() != '']
     return chunks
-
-# Preprocess and split the texts
-
 
 # LDA implementation
 def get_topics(texts, num_topics=2, top_n_words=10, max_df=0.85, min_df=1):
@@ -217,7 +215,7 @@ def get_topics(texts, num_topics=2, top_n_words=10, max_df=0.85, min_df=1):
         top_features = [feature_names[i] for i in top_features_indices]
         topics[topic_idx] = top_features
     
-    return list(topics.values())[0]#, lda, vectorizer
+    return list(topics.values())[0]  # Return the top features for the first topic
 
 def get_document_topics(lda_model, dtm):
     doc_topic_distr = lda_model.transform(dtm)
@@ -227,6 +225,11 @@ def get_document_topics(lda_model, dtm):
 # Run LDA on the chunks
 def getLdaTopics(text):
     book = preprocess_text(text)
+    chunks = split_text(book)
+    if not chunks:  # Check if chunks are empty
+        return []
+    return get_topics(chunks, num_topics=1, max_df=1.0, min_df=1)
+
 
 # Split the text into chunks
     chunks = split_text(book)
