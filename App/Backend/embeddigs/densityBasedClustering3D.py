@@ -83,7 +83,8 @@ def visualise_word_clusters_3d(words, vectors, cluster_labels):
         print("No vectors to visualize.")
         return
     
-    perplexity = 5  # Try a different value for perplexity
+    vectors = np.array(vectors)  # Convert to numpy array
+    perplexity = min(5, len(vectors) - 1)  # Adjust perplexity if necessary
     learning_rate = 200  # Default learning rate
     n_iter = 1000  # Number of iterations
 
@@ -105,11 +106,11 @@ def visualise_word_clusters_3d(words, vectors, cluster_labels):
         else:
             color = None  # Use default coloring
             label = f'Cluster {cluster}'
-        
+            # Plot names for clustered points only
+            for point, word in zip(cluster_points, cluster_words):
+                ax.text(point[0], point[1], point[2], word, fontsize=9)
+
         ax.scatter(cluster_points[:, 0], cluster_points[:, 1], cluster_points[:, 2], label=label, color=color)
-        
-        for point, word in zip(cluster_points, cluster_words):
-            ax.text(point[0], point[1], point[2], word, fontsize=9)
     
     ax.set_title('t-SNE 3D Visualization of Word Clusters')
     ax.set_xlabel('t-SNE Component 1')
@@ -138,7 +139,7 @@ def vectorClustering3d(words):
         print("No data found in the database.")
     else:
         # DBSCAN Clustering
-        dbscan = DBSCAN(eps=0.5, min_samples=3)
+        dbscan = DBSCAN(eps=0.8, min_samples=2)
         cluster_assignment = dbscan.fit_predict(unique_vectors)
 
         visualise_word_clusters_3d(unique_words, unique_vectors, cluster_assignment)
