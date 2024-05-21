@@ -5,8 +5,9 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from sentence_transformers import SentenceTransformer
 from keyWordExtractor import getLdaTopics
-from sklearn.cluster import DBSCAN
+from sklearn.cluster import AgglomerativeClustering
 from sklearn.manifold import TSNE
+from sklearn.metrics.pairwise import cosine_similarity
 from dotenv import load_dotenv
 import warnings
 
@@ -61,22 +62,6 @@ def retrieve_all_word_vectors(conn):
     vectors = [pickle.loads(row[1]) for row in rows]
     return words, vectors
 
-def preprocess_text(text):
-    text = text.lower()  # Convert to lowercase
-    text = re.sub(r'[^\w\s]', '', text)  # Remove punctuation
-    text = re.sub(r'\d+', '', text)  # Remove numbers
-    stop_words = set(stopwords.words('english'))
-    text = " ".join([word for word in text.split() if word not in stop_words])  # Remove stopwords
-    return text
-
-# Split text into smaller parts
-def split_text(text, chunk_size=5):
-    sentences = sent_tokenize(text)
-    chunks = [' '.join(sentences[i:i + chunk_size]) for i in range(0, len(sentences), chunk_size)]
-    return chunks
-
-# Preprocess and split the texts
-
 # Visualization function
 def visualise_word_clusters_3d(words, vectors, cluster_labels):
     if len(vectors) == 0:
@@ -96,22 +81,19 @@ def visualise_word_clusters_3d(words, vectors, cluster_labels):
     unique_clusters = set(cluster_labels)
     
     for cluster in unique_clusters:
+        if cluster == -1:
+            continue  # Skip noise points
         indices = [i for i, c in enumerate(cluster_labels) if c == cluster]
         cluster_points = reduced_vectors[indices]
         cluster_words = [words[i] for i in indices]
         
-        if cluster == -1:
-            continue
-            color = 'k'  # Noise points colored black
-            label = 'Noise'
-        else:
-            color = None  # Use default coloring
-            label = f'Cluster {cluster}'
-            # Plot names for clustered points only
-            for point, word in zip(cluster_points, cluster_words):
-                ax.text(point[0], point[1], point[2], word, fontsize=9)
-
+        color = None  # Use default coloring
+        label = f'Cluster {cluster}'
+        
         ax.scatter(cluster_points[:, 0], cluster_points[:, 1], cluster_points[:, 2], label=label, color=color)
+        # Plot names for clustered points only
+        for point, word in zip(cluster_points, cluster_words):
+            ax.text(point[0], point[1], point[2], word, fontsize=9)
     
     ax.set_title('t-SNE 3D Visualization of Word Clusters')
     ax.set_xlabel('t-SNE Component 1')
@@ -139,13 +121,16 @@ def vectorClustering3d(words):
     if len(unique_vectors) == 0 or len(unique_words) == 0:
         print("No data found in the database.")
     else:
-        # DBSCAN Clustering
-        dbscan = DBSCAN(eps=0.85, min_samples=2)
-        cluster_assignment = dbscan.fit_predict(unique_vectors)
+        # Compute cosine similarity matrix
+        similarity_matrix = cosine_similarity(unique_vectors)
+        
+        # Agglomerative Clustering
+        clustering = AgglomerativeClustering(n_clusters=None, metric='precomputed', linkage='average', distance_threshold=0.5)
+        cluster_assignment = clustering.fit_predict(1 - similarity_matrix)  # 1 - similarity because higher similarity means closer
 
         visualise_word_clusters_3d(unique_words, unique_vectors, cluster_assignment)
 
-#import stories from text file split by "story: "
+# Import stories from text file split by "Story: "
 with open('stories.txt', 'r') as file:
     stories = file.read().split("Story:")
     storyLdaArray = []

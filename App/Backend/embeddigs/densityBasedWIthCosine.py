@@ -7,6 +7,7 @@ from sentence_transformers import SentenceTransformer
 from keyWordExtractor import getLdaTopics
 from sklearn.cluster import DBSCAN
 from sklearn.manifold import TSNE
+from sklearn.metrics.pairwise import cosine_distances
 from dotenv import load_dotenv
 import warnings
 
@@ -61,22 +62,6 @@ def retrieve_all_word_vectors(conn):
     vectors = [pickle.loads(row[1]) for row in rows]
     return words, vectors
 
-def preprocess_text(text):
-    text = text.lower()  # Convert to lowercase
-    text = re.sub(r'[^\w\s]', '', text)  # Remove punctuation
-    text = re.sub(r'\d+', '', text)  # Remove numbers
-    stop_words = set(stopwords.words('english'))
-    text = " ".join([word for word in text.split() if word not in stop_words])  # Remove stopwords
-    return text
-
-# Split text into smaller parts
-def split_text(text, chunk_size=5):
-    sentences = sent_tokenize(text)
-    chunks = [' '.join(sentences[i:i + chunk_size]) for i in range(0, len(sentences), chunk_size)]
-    return chunks
-
-# Preprocess and split the texts
-
 # Visualization function
 def visualise_word_clusters_3d(words, vectors, cluster_labels):
     if len(vectors) == 0:
@@ -101,7 +86,6 @@ def visualise_word_clusters_3d(words, vectors, cluster_labels):
         cluster_words = [words[i] for i in indices]
         
         if cluster == -1:
-            continue
             color = 'k'  # Noise points colored black
             label = 'Noise'
         else:
@@ -139,13 +123,16 @@ def vectorClustering3d(words):
     if len(unique_vectors) == 0 or len(unique_words) == 0:
         print("No data found in the database.")
     else:
-        # DBSCAN Clustering
-        dbscan = DBSCAN(eps=0.85, min_samples=2)
-        cluster_assignment = dbscan.fit_predict(unique_vectors)
+        # Compute cosine distance matrix
+        distance_matrix = cosine_distances(unique_vectors)
+        
+        # DBSCAN Clustering with cosine distance
+        dbscan = DBSCAN(metric='precomputed', eps=0.3, min_samples=2)
+        cluster_assignment = dbscan.fit_predict(distance_matrix)
 
         visualise_word_clusters_3d(unique_words, unique_vectors, cluster_assignment)
 
-#import stories from text file split by "story: "
+# Import stories from text file split by "Story: "
 with open('stories.txt', 'r') as file:
     stories = file.read().split("Story:")
     storyLdaArray = []
