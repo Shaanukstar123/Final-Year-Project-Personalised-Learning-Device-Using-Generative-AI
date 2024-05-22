@@ -6,6 +6,7 @@ from langchain.chains import ConversationChain
 from langchain.prompts.prompt import PromptTemplate
 from langchain.chains.conversation.memory import ConversationSummaryBufferMemory
 import os
+import re 
 import time
 #import .env file
 from dotenv import load_dotenv
@@ -26,13 +27,13 @@ def initialiseModel():
     output_parser = StrOutputParser() #converts output to string
     memory = ConversationSummaryBufferMemory(llm=llm, max_token_limit= 500)
     promptText = """
-    The following is a continuous interactive educational children's story-telling session based on the topic of a given news article. Generate around 50 word page that will continue the story after each
+    The following is a continuous interactive educational children's story-telling session based on the topic of a given news article. Generate around a 50-word page that will continue the story after each
     prompt input. User input will determine how the story changes in the current page. Start the page with a DALL-E prompt for visualizing the current page's events beginning with "DALL-E Prompt: ". 
     Continue the story given the history of chat by the conversational summary buffer memory. Ask an educational question at the end of the page that relates to the story and can change the direction of the narrative. 
     The article will be introduced first before starting the story.
     Each segment (page) of the story has 1 question or decision that will change the next page's content, in the form "Question: ".
 
-    History of chat: {history}
+    Story history: {history}
     User input to the previous question: {input}
     """
 
@@ -50,78 +51,61 @@ def saveToMemory(memory, new_content):
     
     # Now save the updated history back into memory
     memory.save_context({"input": "history"}, {"output": updatedHistory})
-    print
+    print("Updated story history saved to memory.")
 
 def streamStoryOutput(llm, prompt):
     for output in llm.stream(prompt):
         yield output 
-
-
+        
 def initialiseStory(article, storyChain):
-    ##TEST CODE##
-    # test = "Waiting and watching. It was all she had done for the past weeks. When you’re locked in a room with nothing but food and drink, that’s about all you can do anyway. "
-    # for word in test.split():
-    #     print((word))
-    #     time.sleep(0.1)
-    #     yield word
-    # ##^^^^^^^^^^^^^^##
-
-    # #clear memory
-    # return ""
     storyChain.memory.clear()
     print("Initialising story")
     memory = storyChain.memory
-    initialContext = "First introduce this news article and then begin the educational story about the subject of the article. Article Summary: " + article
+    initialContext = "First introduce this news article and then begin the first page of an educational creative story about the topic of the article. Article Summary: " + article + " Only generate the first page of the story."
     print("Initialised Context")
+    buffered_output = ""
     for output in streamStoryOutput(storyChain.llm, initialContext):
-        # print("Memory: ",memory)
-        # print("TempOutput: ",output)
-        #print type of output content:
-        print("Output data type: ", type(output.content))
-        yield output.content
+        buffered_output += output.content
+        while True:
+            match = re.search(r'\s', buffered_output)
+            if not match:
+                break
+            index = match.start()
+            yield buffered_output[:index + 1]
+            buffered_output = buffered_output[index + 1:]
 
-    saveToMemory(memory, initialContext)
-    output = storyChain.predict(input=initialContext)
-    # save the output to memory
-    saveToMemory(memory, output)
-    
-    memory.save_context({"input": "latest"}, {"output": output})
-    return output
+    if buffered_output:
+        yield buffered_output
+
+    # Save the initial context and the generated content to memory
+    saveToMemory(memory, initialContext + buffered_output)
 
 def continueStory(storyChain, userInput):
     print("Continuing story...")
-    ##TEST CODE##
-    # test = "One can cook on and with an open fire. These are some of the ways to cook with fire outside. Cooking meat using a spit is a great way to evenly cook meat. In order to keep meat from burning, it's best to slowly rotate it. Hot stones can be used to toast bread. Coals are hot and can bring things to a boil quickly. If one is very adventurous, one can make a hole in the ground, fill it with coals and place foil-covered meat, veggies, and potatoes into the coals, and cover all of it with dirt. In a short period of time, the food will be baked. Campfire cooking can be done in many ways"
-    # for word in test.split():
-    #     yield word
-    # return ""
     memory = storyChain.memory
-    ##^^^^^^^^^##
 
-    # Load current story context from memory
-    #storyContext = memory.load_memory_variables({})
-    # print("Cumulative story context: ",storyContext)
-    # cumulativeInput = ""
-    # if storyContext.get("history"):
-    #     cumulativeInput = f"{storyContext['history']} {userInput}"
-    # else:
-    #     cumulativeInput = userInput
-    # Assuming 'predict' or a similar function uses the current context and user input
-    # output = storyChain.predict(input=cumulativeInput)
-    prompt = '''This is the user output to the question asked in the previous page of the story (stored in conversatinal buffer memory). Continue the story based on the user's answer with a new page and question at the
-    end, or conclude the story by ending with "THE END". User's answer to previous question: ''' + userInput
+    # Retrieve the existing story history from memory
+    existingHistory = memory.load_memory_variables({})
+    story_so_far = existingHistory.get("history", "")
+    
+    prompt = f'''You are a narrator. Continue this educational creative story about this topic onto the next page. If the story is about to conclude then end it with "THE END". Story so far: {story_so_far} User's input: {userInput}'''
+    print("prompt: ", prompt)
+    buffered_output = ""
     for output in streamStoryOutput(storyChain.llm, prompt):
-        print("Output: ", output)
-        # Optional: Save to memory if needed
-        # saveToMemory(memory, output)
-        yield output.content  # Yield each output part as soon as it is available
+        buffered_output += output.content
+        while True:
+            match = re.search(r'\s', buffered_output)
+            if not match:
+                break
+            index = match.start()
+            yield buffered_output[:index + 1]
+            buffered_output = buffered_output[index + 1:]
 
-    # output = storyChain.predict(input=prompt)
-    # print("Output: ",output)
-    #saveToMemory(memory, output)
-    #print("MemoryContinued: ",memory)
-    #return output
+    if buffered_output:
+        yield buffered_output
 
+    # Save the prompt and the generated content to memory
+    saveToMemory(memory, prompt + buffered_output)
 
 if __name__ == "__main__":
     print ("Initialising model")

@@ -162,23 +162,6 @@ let cumulativeDelay = 0;
 const wordDisplayInterval = 100; // Interval between words appearing, in milliseconds
 
 function displayContentWithAnimation(container, contentChunk) {
-    // Handle incomplete words from previous chunks
-    contentChunk = incompleteWord + contentChunk;
-    incompleteWord = '';
-
-    // Check if the last character is not a space, indicating a potentially incomplete last word
-    if (contentChunk.slice(-1) !== ' ') {
-        let lastSpaceIndex = contentChunk.lastIndexOf(' ');
-        if (lastSpaceIndex !== -1) {
-            incompleteWord = contentChunk.slice(lastSpaceIndex + 1);
-            contentChunk = contentChunk.slice(0, lastSpaceIndex);
-        } else {
-            incompleteWord = contentChunk; // The whole chunk is an incomplete word
-            return; // Don't display anything yet
-        }
-    }
-
-    // Split the content into words and animate each word
     const words = contentChunk.split(/\s+/);
 
     words.forEach(word => {
@@ -197,31 +180,6 @@ function displayContentWithAnimation(container, contentChunk) {
         }
     });
 }
-
-// function displayContentWithAnimation(container, content) {
-//     container.innerHTML = ''; // Clear previous content
-//     const words = content.split(' ');
-//     words.forEach((word, index) => {
-//         const span = document.createElement('span');
-//         span.textContent = word + ' ';
-//         span.style.opacity = 0;
-//         // Remove any absolute positioning if present and ensure natural text flow
-//         span.style.position = 'relative';  // Ensure spans are not positioned absolutely
-//         span.style.display = 'inline';     // Display as inline to allow natural flow in text
-//         span.style.animation = `fadeIn 0.3s ease forwards ${index * 0.05}s`;
-//         container.appendChild(span);
-//     });
-// }
-// function displayContentWithAnimation(container, contentChunk) {
-//     const words = contentChunk.split(' ');
-//     words.forEach(word => {
-//         const span = document.createElement('span');
-//         span.textContent = word + ' ';
-//         container.appendChild(span);
-//     });
-// }
-
-
 
 function displayImage(container, imageUrl) {
     const imgElement = document.createElement('img');
@@ -264,15 +222,26 @@ function displayPage(index) {
 function fetchNextPage() {
     console.log('Fetching next page of the story');
     const userInput = "User's input here"; // Placeholder for actual user input
-    axios.post('http://localhost:5000/continue_story/', { user_input: userInput })
-        .then(response => {
-            const { story } = response.data;
-            addPage(story, ''); // Add new page to pages array, initially without image
-            updateImage(story); // Fetch and update the image based on the new story part
-        })
-        .catch(error => console.error('Error fetching next page:', error));
-}
 
+    const eventSource = new EventSource(`http://localhost:5000/continue_story?user_input=${encodeURIComponent(userInput)}`);
+    
+    eventSource.onmessage = function(event) {
+        console.log('Received:', event.data);
+        // Update the content as it streams in
+        const storyContainer = document.getElementById('story-container');
+        displayContentWithAnimation(storyContainer, event.data); // Update displayContentWithAnimation to handle the streamed data
+    };
+    
+    eventSource.onerror = function() {
+        console.log('Event Source failed');
+        eventSource.close();
+    };
+
+    // Clear current content to display new page content
+    const storyContainer = document.getElementById('story-container');
+    storyContainer.innerHTML = '';
+    cumulativeDelay = 0;  // Reset the delay for word animation
+}
 function initialiseSwipeDetection(element) {
     if (!element) return;
 
@@ -298,16 +267,6 @@ function initialiseSwipeDetection(element) {
 }
 
 
-function goToPreviousPage() {
-    if (currentPageIndex > 0) {
-        currentPageIndex--;
-        displayPage(currentPageIndex);
-    }
-    else{
-        currentPageIndex = 0;
-    }
-}
-
 function goToNextPage() {
     if (currentPageIndex < pages.length - 1) {
         currentPageIndex++;
@@ -315,6 +274,15 @@ function goToNextPage() {
     } else {
         // If at the last page, fetch next page
         fetchNextPage();
+    }
+}
+
+function goToPreviousPage() {
+    if (currentPageIndex > 0) {
+        currentPageIndex--;
+        displayPage(currentPageIndex);
+    } else {
+        currentPageIndex = 0;
     }
 }
 

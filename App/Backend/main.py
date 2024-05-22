@@ -49,37 +49,33 @@ def fetch_story(id):
                         mimetype="text/event-stream")
     else:
         return jsonify({"error": "Article not found"}), 404
-# @app.route('/fetch_story/<id>', methods=['GET'])
-# def fetch_story(id):
-#     def generate():
-#         test_string = "Waiting and watching. It was all she had done for the past weeks. When you’re locked in a room with nothing but food and drink, that’s about all you can do anyway."
-#         for word in test_string.split():
-#             yield f"data: {word}\n\n"
-#     return Response(generate(), mimetype='text/event-stream')
+    
     
 def stream_story(articleContent, storyChain):
     story_gen = initialiseStory(articleContent, storyChain)
     print("Type of story Gen: ",type(story_gen))
     try:
         for story_part in story_gen:
-            yield f"data: {json.dumps({'story': story_part})}\n\n"
+            yield f"data: {story_part}\n\n"
     except GeneratorExit:
         print("Stream closed")
         
-@app.route('/continue_story/', methods=['POST'])        
+@app.route('/continue_story', methods=['GET'])
 def continue_story():
-    user_input = request.json.get('user_input', '')
+    user_input = request.args.get('user_input', '')
+    print(f"Received user input: {user_input}")
     return Response(continue_story_stream(user_input, storyChain),
                     mimetype="text/event-stream")
 
 def continue_story_stream(user_input, storyChain):
+    print("Starting story continuation stream...")
     story_continuation_gen = continueStory(storyChain, user_input)
     try:
         for story_part in story_continuation_gen:
-            yield f"data: {json.dumps({'story': story_part})}\n\n"
+            # print(f"Streaming story part: {story_part}")
+            yield f"data: {story_part}\n\n"
     except GeneratorExit:
         print("Stream closed")
-
 
 #Speech to text api token fetcher
 @app.route('/get_token', methods=['GET'])
