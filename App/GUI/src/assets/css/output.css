@@ -691,6 +691,7 @@ video {
   box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Subtle shadow */
   cursor: pointer; /* Cursor indication for button */
   transition: all 0.3s ease; /* Smooth transition for hover */
+  transform-origin: center center;
 }
 .trending-topic-button.expandContract {
   animation: expandContract 2s infinite;

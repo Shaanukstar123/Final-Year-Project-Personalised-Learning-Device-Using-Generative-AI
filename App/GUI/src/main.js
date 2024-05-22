@@ -41,10 +41,14 @@ function clearCache() {
 
 
 function createWindow () {
-  const clearLocalStorage = `
-  localStorage.clear();
-  console.log('LocalStorage cleared successfully');
-`;
+
+  ////LOCAL STORAGE:
+//   const clearLocalStorage = `
+//   localStorage.clear();
+//   console.log('LocalStorage cleared successfully');
+// `;
+
+//
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     webPreferences: {
@@ -62,11 +66,16 @@ function createWindow () {
   });
 
   // Load the index.html of the app (pointing to your new homepage).
+
   mainWindow.loadFile('src/renderer/homepage/index.html');
-  mainWindow.webContents.on('did-finish-load', () => {
-    mainWindow.webContents.executeJavaScript(clearLocalStorage)
-      .catch(error => console.error('Error clearing LocalStorage:', error));
-  });
+
+  //LOCAL STORAGE:
+  // mainWindow.webContents.on('did-finish-load', () => {
+  //   mainWindow.webContents.executeJavaScript(clearLocalStorage)
+  //     .catch(error => console.error('Error clearing LocalStorage:', error));
+  // });
+
+  //
  // mainWindow.setMenu(null); 
   // mainWindow.on('closed', function () {
   //   mainWindow = null;

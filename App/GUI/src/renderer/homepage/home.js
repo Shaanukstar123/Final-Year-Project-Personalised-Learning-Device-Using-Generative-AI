@@ -20,8 +20,6 @@ function getTopicsFromAPI() {
     });
 }
 
-
-
 function createTopicButtons(topics) {
     const container = document.getElementById('trending-topics');
     container.innerHTML = ''; // Clear any existing buttons
@@ -42,9 +40,12 @@ function startRandomAnimations() {
     const buttons = document.querySelectorAll('.trending-topic-button');
     setInterval(() => {
         buttons.forEach(button => button.classList.remove('expandContract'));
-        const randomButton = buttons[Math.floor(Math.random() * buttons.length)];
-        randomButton.classList.add('expandContract');
-    }, 3000);
+        const numButtons = Math.floor(Math.random() * buttons.length/4) + 1; // Number of buttons to animate
+        for (let i = 0; i < numButtons; i++) {
+            const randomButton = buttons[Math.floor(Math.random() * buttons.length)];
+            randomButton.classList.add('expandContract');
+        }
+    }, 1500); // Interval time in milliseconds
 }
 
 // function handleButtonClick(event) {
