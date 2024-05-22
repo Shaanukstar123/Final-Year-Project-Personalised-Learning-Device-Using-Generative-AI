@@ -670,19 +670,30 @@ video {
   bottom: 0;
   width: 100%; /* Take the full width */
 }
-
+@keyframes expandContract {
+  0%, 100% {
+      transform: scale(1);
+  }
+  50% {
+      transform: scale(1.1);
+  }
+}
 /* Style for each smaller topic button */
 .trending-topic-button {
   opacity: 0.8; /* Slightly transparent */
   background-color: #f3df2f; /* Example background color */
   color: #333; /* Example text color */
   border-radius: 10px; /* Rounded corners */
-  padding: 10px 15px; /* Smaller padding */
+  margin: 5px;
+  padding: 10px 20px; /* Smaller padding */
   font-size: 0.8rem; /* Smaller font size */
   text-align: center;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Subtle shadow */
   cursor: pointer; /* Cursor indication for button */
   transition: all 0.3s ease; /* Smooth transition for hover */
+}
+.trending-topic-button.expandContract {
+  animation: expandContract 2s infinite;
 }
 
 .trending-topic-button:hover {

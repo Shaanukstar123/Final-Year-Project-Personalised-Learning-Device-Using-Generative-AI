@@ -35,6 +35,16 @@ function createTopicButtons(topics) {
         button.addEventListener('click', handleButtonClick);
         container.appendChild(button);
     });
+    startRandomAnimations();
+}
+
+function startRandomAnimations() {
+    const buttons = document.querySelectorAll('.trending-topic-button');
+    setInterval(() => {
+        buttons.forEach(button => button.classList.remove('expandContract'));
+        const randomButton = buttons[Math.floor(Math.random() * buttons.length)];
+        randomButton.classList.add('expandContract');
+    }, 3000);
 }
 
 // function handleButtonClick(event) {

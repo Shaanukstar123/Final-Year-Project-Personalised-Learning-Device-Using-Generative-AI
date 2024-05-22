@@ -1,4 +1,6 @@
 const { app, BrowserWindow } = require('electron');
+const fs = require('fs');
+
 const path = require('path');
 
 require('electron-reload')(__dirname, {
@@ -6,26 +8,43 @@ require('electron-reload')(__dirname, {
 });
 
 function clearCache() {
-  const cachePath = path.join(app.getPath('userData'), 'Local Storage');
+  localStorage.clear();
+  // var remote = require('remote'); 
+  // var win = remote.getCurrentWindow();
+  // win.webContents.session.clearCache(function(){
+  // //some callback.
+  // });
+  console.log('Clearing cache...');
+  // const cachePath = path.join(app.getPath('userData'), 'Local Storage');
 
-  try {
-    if (fs.existsSync(cachePath)) {
-      console.log(`Cache path found: ${cachePath}`);
-      fs.readdirSync(cachePath).forEach((file) => {
-        const filePath = path.join(cachePath, file);
-        console.log(`Deleting file: ${filePath}`);
-        fs.unlinkSync(filePath);
-      });
-      console.log('Cache cleared successfully');
-    } else {
-      console.log('Cache path does not exist');
-    }
-  } catch (error) {
-    console.error('Error clearing cache:', error);
-  }
+  // try {
+  //   if (fs.existsSync(cachePath)) {
+  //     console.log(`Cache path found: ${cachePath}`);
+  //     fs.readdirSync(cachePath).forEach((file) => {
+  //       const filePath = path.join(cachePath, file);
+  //       console.log(`Deleting file: ${filePath}`);
+  //       try {
+  //         fs.unlinkSync(filePath);
+  //         console.log(`Deleted file: ${filePath}`);
+  //       } catch (unlinkError) {
+  //         console.error(`Error deleting file ${filePath}:`, unlinkError);
+  //       }
+  //     });
+  //     console.log('Cache cleared successfully');
+  //   } else {
+  //     console.log('Cache path does not exist');
+  //   }
+  // } catch (error) {
+  //   console.error('Error clearing cache:', error);
+  // }
 }
 
+
 function createWindow () {
+  const clearLocalStorage = `
+  localStorage.clear();
+  console.log('LocalStorage cleared successfully');
+`;
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     webPreferences: {
@@ -44,6 +63,10 @@ function createWindow () {
 
   // Load the index.html of the app (pointing to your new homepage).
   mainWindow.loadFile('src/renderer/homepage/index.html');
+  mainWindow.webContents.on('did-finish-load', () => {
+    mainWindow.webContents.executeJavaScript(clearLocalStorage)
+      .catch(error => console.error('Error clearing LocalStorage:', error));
+  });
  // mainWindow.setMenu(null); 
   // mainWindow.on('closed', function () {
   //   mainWindow = null;
@@ -53,7 +76,6 @@ app.commandLine.appendSwitch('enable-features', 'WebSpeechAPI');
 process.env.GOOGLE_API_KEY = 'AIzaSyDEFZTqFNr512nWLs_l37oJEMQ3_qtEXTQ';
 
 app.whenReady().then(() => {
-  clearCache();
   createWindow();
 });
 app.on('window-all-closed', () => {

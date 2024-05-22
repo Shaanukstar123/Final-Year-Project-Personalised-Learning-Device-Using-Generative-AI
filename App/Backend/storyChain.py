@@ -59,42 +59,42 @@ def streamStoryOutput(llm, prompt):
 
 def initialiseStory(article, storyChain):
     ##TEST CODE##
-    test = "Waiting and watching. It was all she had done for the past weeks. When you’re locked in a room with nothing but food and drink, that’s about all you can do anyway. "
-    for word in test.split():
-        print((word))
-        time.sleep(0.1)
-        yield word
-    ##^^^^^^^^^^^^^^##
+    # test = "Waiting and watching. It was all she had done for the past weeks. When you’re locked in a room with nothing but food and drink, that’s about all you can do anyway. "
+    # for word in test.split():
+    #     print((word))
+    #     time.sleep(0.1)
+    #     yield word
+    # ##^^^^^^^^^^^^^^##
 
     # #clear memory
     # return ""
-    # storyChain.memory.clear()
-    # print("Initialising story")
-    # memory = storyChain.memory
-    # initialContext = "First introduce this news article and then begin the educational story about the subject of the article. Article Summary: " + article
-    # print("Initialised Context")
-    # for output in streamStoryOutput(storyChain.llm, initialContext):
-    #     # print("Memory: ",memory)
-    #     # print("TempOutput: ",output)
-    #     #print type of output content:
-    #     print("Output data type: ", type(output.content))
-    #     yield output.content
+    storyChain.memory.clear()
+    print("Initialising story")
+    memory = storyChain.memory
+    initialContext = "First introduce this news article and then begin the educational story about the subject of the article. Article Summary: " + article
+    print("Initialised Context")
+    for output in streamStoryOutput(storyChain.llm, initialContext):
+        # print("Memory: ",memory)
+        # print("TempOutput: ",output)
+        #print type of output content:
+        print("Output data type: ", type(output.content))
+        yield output.content
 
-    #saveToMemory(memory, initialContext)
-    #output = storyChain.predict(input=initialContext)
-    #save the output to memory
-    #saveToMemory(memory, output)
+    saveToMemory(memory, initialContext)
+    output = storyChain.predict(input=initialContext)
+    # save the output to memory
+    saveToMemory(memory, output)
     
-    #memory.save_context({"input": "latest"}, {"output": output})
-    #return output
+    memory.save_context({"input": "latest"}, {"output": output})
+    return output
 
 def continueStory(storyChain, userInput):
     print("Continuing story...")
     ##TEST CODE##
-    test = "One can cook on and with an open fire. These are some of the ways to cook with fire outside. Cooking meat using a spit is a great way to evenly cook meat. In order to keep meat from burning, it's best to slowly rotate it. Hot stones can be used to toast bread. Coals are hot and can bring things to a boil quickly. If one is very adventurous, one can make a hole in the ground, fill it with coals and place foil-covered meat, veggies, and potatoes into the coals, and cover all of it with dirt. In a short period of time, the food will be baked. Campfire cooking can be done in many ways"
-    for word in test.split():
-        yield word
-    return ""
+    # test = "One can cook on and with an open fire. These are some of the ways to cook with fire outside. Cooking meat using a spit is a great way to evenly cook meat. In order to keep meat from burning, it's best to slowly rotate it. Hot stones can be used to toast bread. Coals are hot and can bring things to a boil quickly. If one is very adventurous, one can make a hole in the ground, fill it with coals and place foil-covered meat, veggies, and potatoes into the coals, and cover all of it with dirt. In a short period of time, the food will be baked. Campfire cooking can be done in many ways"
+    # for word in test.split():
+    #     yield word
+    # return ""
     memory = storyChain.memory
     ##^^^^^^^^^##
 

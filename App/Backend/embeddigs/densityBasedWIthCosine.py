@@ -133,15 +133,16 @@ def vectorClustering3d(words):
         visualise_word_clusters_3d(unique_words, unique_vectors, cluster_assignment)
 
 # Import stories from text file split by "Story: "
-with open('stories.txt', 'r') as file:
-    stories = file.read().split("Story:")
-    storyLdaArray = []
-    for story in stories:
-        if story.strip():  # Ensure non-empty stories
-            print(f"Processing story: {story[:60]}...")  # Print the start of the story for context
-            ldaTopics = getLdaTopics(story)
-            storyLdaArray.extend(ldaTopics)  # Flatten the list of LDA topics
-            print(f"Extracted LDA Topics: {ldaTopics}")
+def test():
+    with open('stories.txt', 'r') as file:
+        stories = file.read().split("Story:")
+        storyLdaArray = []
+        for story in stories:
+            if story.strip():  # Ensure non-empty stories
+                print(f"Processing story: {story[:60]}...")  # Print the start of the story for context
+                ldaTopics = getLdaTopics(story)
+                storyLdaArray.extend(ldaTopics)  # Flatten the list of LDA topics
+                print(f"Extracted LDA Topics: {ldaTopics}")
 
-# Cluster and visualize the words
-vectorClustering3d(storyLdaArray)
+    # Cluster and visualize the words
+    vectorClustering3d(storyLdaArray)
