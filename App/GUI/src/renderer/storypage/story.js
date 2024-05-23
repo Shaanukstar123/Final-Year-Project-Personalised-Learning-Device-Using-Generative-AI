@@ -12,6 +12,7 @@ messageEl.style.display = "none";
 let isRecording = false;
 let rt;
 let microphone = null;
+let userTranscription = ''; 
 
 document.addEventListener('DOMContentLoaded', () => {
     const storyContainer = document.getElementById('story-container');
@@ -153,9 +154,14 @@ function fetchNextPage() {
         }
     })
     .then(response => {
+        console.log('Next page content:', response.data);
         const storyContent = response.data.story; // Adjust according to your response structure
-        const storyContainer = document.getElementById('story-container');
-        displayContentWithAnimation(storyContainer, storyContent); // Update displayContentWithAnimation to handle the received data
+        if (storyContent) {
+            const storyContainer = document.getElementById('story-container');
+            displayContentWithAnimation(storyContainer, storyContent); // Update displayContentWithAnimation to handle the received data
+        } else {
+            console.error('Story content is undefined');
+        }
     })
     .catch(error => {
         console.error('Error fetching next page:', error);
@@ -372,6 +378,7 @@ const run = async () => {
           msg += ` ${texts[key]}`;
         }
       }
+      userTranscription = msg.trim();
       messageEl.innerText = msg;
     });
 

@@ -71,7 +71,7 @@ def continue_story():
     user_input = request.args.get('user_input', '')
     print(f"Received user input: {user_input}")
     response = continueStory(storyChain, user_input)
-    return jsonify({"response": response})
+    return jsonify({"story": response})
 #     return Response(continue_story_stream(user_input, storyChain),
 #                     mimetype="text/event-stream")
 

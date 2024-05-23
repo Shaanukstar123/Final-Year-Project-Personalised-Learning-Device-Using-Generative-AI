@@ -93,6 +93,7 @@ def continueStory(storyChain, userInput):
     # if buffered_output:
     #     yield buffered_output
     response = storyChain(userInput)
+    print(response["response"])
     return response["response"]
 
 if __name__ == "__main__":
