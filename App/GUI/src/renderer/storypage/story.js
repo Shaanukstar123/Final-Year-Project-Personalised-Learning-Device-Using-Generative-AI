@@ -27,9 +27,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (topicId) {
         axios.get(`http://localhost:5000/fetch_story/${topicId}`)
             .then(response => {
-                const storyContent = response.data.story; // Adjust according to your response structure
+                const storyContent = response.data.story; 
+                const imagePrompt = response.data.imagePrompt; 
                 const storyContainer = document.getElementById('story-container');
-                displayContentWithAnimation(storyContainer, storyContent); // Update displayContentWithAnimation to handle the received data
+                displayContentWithAnimation(storyContainer, storyContent); 
+                updateImage(imagePrompt);
             })
             .catch(error => {
                 console.error('Error fetching story:', error);
@@ -50,28 +52,51 @@ document.addEventListener('DOMContentLoaded', () => {
     initialiseSwipeDetection(storyContainer);
 });
 
+function fetchNextPage() {
+    console.log('Fetching next page of the story');
+
+    const userInput = userTranscription; // Use the transcribed text
+    console.log('User input:', userInput);
+
+    axios.get(`http://localhost:5000/continue_story`, {
+        params: {
+            user_input: userInput
+        }
+    })
+    .then(response => {
+        console.log('Next page content:', response.data);
+        const storyContent = response.data.story;
+        const imagePrompt = response.data.imagePrompt; 
+        if (storyContent) {
+            const storyContainer = document.getElementById('story-container');
+            displayContentWithAnimation(storyContainer, storyContent); 
+            updateImage(imagePrompt);
+        } else {
+            console.error('Story content is undefined');
+        }
+    })
+    .catch(error => {
+        console.error('Error fetching next page:', error);
+    });
+
+    // Clear current content to display new page content
+    const storyContainer = document.getElementById('story-container');
+    storyContainer.innerHTML = '';
+    cumulativeDelay = 0;  // Reset the delay for word animation
+}
 // Existing functions from story.js here...
 
-function updateImage(storyContent) {
-    // Check if the story content contains a "DALL-E prompt:"
-    const promptRegex = /dall-e prompt:/i; // 'i' flag for case-insensitive matching
-    const promptMatch = storyContent.match(promptRegex);
-
-    if (promptMatch) {
-        // Extract the content after the prompt for image generation
-        const promptIndex = promptMatch.index + promptMatch[0].length;
-        const imageDescription = storyContent.substring(promptIndex).trim();
-
-        // Only proceed with the API call if there's a valid description
-        if (imageDescription.length > 0) {
-            axios.post('http://localhost:5000/get_image', { text: imageDescription })
-                .then(response => {
-                    const { image_url } = response.data;
-                    pages[currentPageIndex].imageUrl = image_url; // Update current page with the new image URL
-                    displayImage(document.getElementById('story-container'), image_url);
-                })
-                .catch(error => console.error('Error fetching image:', error));
-        }
+function updateImage(prompt) {
+    // Only proceed with the API call if there's a valid description
+    if (prompt.length > 0) {
+        axios.post('http://localhost:5000/get_image', { text: prompt })
+            .then(response => {
+                console.log("image response", response.data)
+                const { imageUrl } = response.data.imageUrl
+                pages[currentPageIndex].imageUrl = imageUrl; // Update current page with the new image URL
+                displayImage(document.getElementById('story-container'), image_url);
+            })
+            .catch(error => console.error('Error fetching image:', error));
     }
 }
 
@@ -142,36 +167,7 @@ function displayPage(index) {
     }
 }
 
-function fetchNextPage() {
-    console.log('Fetching next page of the story');
 
-    const userInput = userTranscription; // Use the transcribed text
-    console.log('User input:', userInput);
-
-    axios.get(`http://localhost:5000/continue_story`, {
-        params: {
-            user_input: userInput
-        }
-    })
-    .then(response => {
-        console.log('Next page content:', response.data);
-        const storyContent = response.data.story; // Adjust according to your response structure
-        if (storyContent) {
-            const storyContainer = document.getElementById('story-container');
-            displayContentWithAnimation(storyContainer, storyContent); // Update displayContentWithAnimation to handle the received data
-        } else {
-            console.error('Story content is undefined');
-        }
-    })
-    .catch(error => {
-        console.error('Error fetching next page:', error);
-    });
-
-    // Clear current content to display new page content
-    const storyContainer = document.getElementById('story-container');
-    storyContainer.innerHTML = '';
-    cumulativeDelay = 0;  // Reset the delay for word animation
-}
 
 
 function initialiseSwipeDetection(element) {

@@ -14,6 +14,6 @@ def generateImageWithDALLE(prompt):
         
     )
     # Assuming the API returns a list of generated images
-    image_url = response.data[0].url  # or however the URL is returned in the response
+    imageUrl = response.data[0].url  # or however the URL is returned in the response
     
-    return image_url
+    return imageUrl

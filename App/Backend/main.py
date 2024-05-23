@@ -36,34 +36,29 @@ def get_topics():
     
 @app.route('/get_image', methods=['POST'])
 def get_image():
-    text_content = request.json.get('text', '')
+    prompt = request.json.get('text', '')
     # Assume generateImage returns a URL to an image or saves the image and returns its path
-    dallePrompt = "2D cartoon child-friendly image with no text of this story: " + generateImage(text_content)
-    image_url = generateImageWithDALLE(dallePrompt)
-    return jsonify({'image_url': image_url})
+    dallePrompt = "2D cartoon child-friendly image of this description: " + prompt
+    imageUrl = generateImageWithDALLE(dallePrompt)
+    return jsonify({'imageUrl': imageUrl})
 
 @app.route('/fetch_story/<id>', methods=['GET'])
 def fetch_story(id):
     global storyChain
+    imagePrompt = ""
     storyChain = initialiseModel()
     articleContent = getArticleContent(id)
     response = initialiseStory(articleContent, storyChain)
-    return jsonify({"story": response})
-    # if articleContent:
-    #     return Response(stream_story(articleContent, storyChain),
-    #                     mimetype="text/event-stream")
-    # else:
-    #     return jsonify({"error": "Article not found"}), 404
+    promptRegex = re.compile(r'dall-e prompt:\s*(.*)', re.IGNORECASE)
+    match = promptRegex.search(response)
+    if match:
+        imagePrompt = match.group(1)
+        print("match found: ", imagePrompt)
+    else:
+        imagePrompt = summariseText(response)
+        print("No match found: ",imagePrompt)
     
-    
-# def stream_story(articleContent, storyChain):
-#     story_gen = initialiseStory(articleContent, storyChain)
-#     print("Type of story Gen: ",type(story_gen))
-#     try:
-#         for story_part in story_gen:
-#             yield f"data: {story_part}\n\n"
-#     except GeneratorExit:
-#         print("Stream closed")
+    return jsonify({"story": response, "imagePrompt": imagePrompt})
         
 @app.route('/continue_story', methods=['GET'])
 def continue_story():
@@ -71,19 +66,15 @@ def continue_story():
     user_input = request.args.get('user_input', '')
     print(f"Received user input: {user_input}")
     response = continueStory(storyChain, user_input)
-    return jsonify({"story": response})
-#     return Response(continue_story_stream(user_input, storyChain),
-#                     mimetype="text/event-stream")
+    promptRegex = re.compile(r'dall-e prompt:\s*(.*)', re.IGNORECASE)
+    match = promptRegex.search(response)
+    if match:
+        imagePrompt = match.group(1)
+    else:
+        imagePrompt = summariseText(response)
+    
+    return jsonify({"story": response, "imagePrompt": imagePrompt})
 
-# def continue_story_stream(user_input, storyChain):
-#     print("Starting story continuation stream...")
-#     story_continuation_gen = continueStory(storyChain, user_input)
-#     try:
-#         for story_part in story_continuation_gen:
-#             # print(f"Streaming story part: {story_part}")
-#             yield f"data: {story_part}\n\n"
-#     except GeneratorExit:
-#         print("Stream closed")
 
 #Speech to text api token fetcher
 @app.route('/get_token', methods=['GET'])
@@ -111,8 +102,8 @@ def get_token():
 
 @app.route('/text-to-speech', methods=['POST'])
 def text_to_speech():
-    return jsonify({"message": "Audio file generated"}), 200
-    ##TEST^^^###
+    # return jsonify({"message": "Audio file generated"}), 200
+    # ##TEST^^^###
     voice_id = "onwK4e9ZLuTAKqWW03F9"  # Example: British Daniel
     url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
 
