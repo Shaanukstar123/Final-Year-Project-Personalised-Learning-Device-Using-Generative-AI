@@ -18,8 +18,9 @@ from dotenv import load_dotenv
 app = Flask(__name__)
 CORS(app) 
 
-storyChain = initialiseModel()
+#storyChain = initialiseModel()
 '''ROUTES'''
+storyChain = initialiseModel()
 
 @app.route('/update_news', methods=['GET'])
 def start_crawler():
@@ -43,39 +44,46 @@ def get_image():
 
 @app.route('/fetch_story/<id>', methods=['GET'])
 def fetch_story(id):
+    global storyChain
+    storyChain = initialiseModel()
     articleContent = getArticleContent(id)
-    if articleContent:
-        return Response(stream_story(articleContent, storyChain),
-                        mimetype="text/event-stream")
-    else:
-        return jsonify({"error": "Article not found"}), 404
+    response = initialiseStory(articleContent, storyChain)
+    return jsonify({"story": response})
+    # if articleContent:
+    #     return Response(stream_story(articleContent, storyChain),
+    #                     mimetype="text/event-stream")
+    # else:
+    #     return jsonify({"error": "Article not found"}), 404
     
     
-def stream_story(articleContent, storyChain):
-    story_gen = initialiseStory(articleContent, storyChain)
-    print("Type of story Gen: ",type(story_gen))
-    try:
-        for story_part in story_gen:
-            yield f"data: {story_part}\n\n"
-    except GeneratorExit:
-        print("Stream closed")
+# def stream_story(articleContent, storyChain):
+#     story_gen = initialiseStory(articleContent, storyChain)
+#     print("Type of story Gen: ",type(story_gen))
+#     try:
+#         for story_part in story_gen:
+#             yield f"data: {story_part}\n\n"
+#     except GeneratorExit:
+#         print("Stream closed")
         
 @app.route('/continue_story', methods=['GET'])
 def continue_story():
+    global storyChain
     user_input = request.args.get('user_input', '')
     print(f"Received user input: {user_input}")
-    return Response(continue_story_stream(user_input, storyChain),
-                    mimetype="text/event-stream")
+    response = continueStory(storyChain, user_input)
+    return jsonify({"response": response})
+#     return Response(continue_story_stream(user_input, storyChain),
+#                     mimetype="text/event-stream")
 
-def continue_story_stream(user_input, storyChain):
-    print("Starting story continuation stream...")
-    story_continuation_gen = continueStory(storyChain, user_input)
-    try:
-        for story_part in story_continuation_gen:
-            # print(f"Streaming story part: {story_part}")
-            yield f"data: {story_part}\n\n"
-    except GeneratorExit:
-        print("Stream closed")
+# def continue_story_stream(user_input, storyChain):
+#     print("Starting story continuation stream...")
+#     story_continuation_gen = continueStory(storyChain, user_input)
+#     try:
+#         for story_part in story_continuation_gen:
+#             # print(f"Streaming story part: {story_part}")
+#             yield f"data: {story_part}\n\n"
+#     except GeneratorExit:
+#         print("Stream closed")
 
 #Speech to text api token fetcher
 @app.route('/get_token', methods=['GET'])

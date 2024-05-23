@@ -23,101 +23,18 @@ document.addEventListener('DOMContentLoaded', () => {
     let isRecording = false;
     buttonEl.addEventListener("click", () => run());
 
-    // buttonEl.addEventListener('click', async () => {
-    //     if (!isRecording) {
-    //         messageEl.textContent = "Listening...";
-    //         try {
-    //             microphone = await setupWebSocketAndMicrophone();
-    //             if (microphone) {
-    //                 isRecording = true;  // Update recording state
-    //             } else {
-    //                 throw new Error("Failed to initialize microphone");
-    //             }
-    //         } catch (error) {
-    //             messageEl.textContent = "Failed to start transcription. Check console for errors.";
-    //             console.error(error);
-    //         }
-    //     } else {
-    //         if (microphone) {
-    //             microphone.stopRecording();
-    //             microphone = null;
-    //         }
-    //         messageEl.textContent += " (stopped)";
-    //         isRecording = false;  // Update recording state
-    //     }
-    // });
-
-    // async function run() {
-    //     if (isRecording) {
-    //         if (rt) {
-    //             await rt.close(false);
-    //             rt = null;
-    //         }
-
-    //         if (microphone) {
-    //             microphone.stopRecording();
-    //             microphone = null;
-    //         }
-
-    //         messageEl.style.display = "none";
-    //         titleEl.innerText = "Click start to begin recording!";
-    //     } else {
-    //         microphone = await setupMicrophone();
-    //         if (!microphone) {
-    //             console.error("Failed to initialize microphone");
-    //             return;
-    //         }
-
-    //         messageEl.style.display = "";
-    //         titleEl.innerText = "Click stop to end recording!";
-
-    //         const token = await getToken();
-    //         if (!token) return;
-
-    //         rt = new assemblyai.RealtimeService({ token: token });
-    //         rt.on("transcript", updateTranscription);
-    //         rt.on("error", async (error) => {
-    //             console.error(error);
-    //             await rt.close();
-    //         });
-    //         rt.on("close", () => {
-    //             console.log("Realtime service closed");
-    //             rt = null;
-    //         });
-
-    //         await rt.connect();
-    //         await microphone.startRecording(sendAudioData);
-    //     }
-
-    //     isRecording = !isRecording;
-    //     buttonEl.innerText = isRecording ? "Stop" : "Record";
-    // }
-
-    // function updateTranscription(message) {
-    //     const transcriptDisplay = document.getElementById("transcript");
-    //     transcriptDisplay.textContent += ` ${message.text}`;
-    // }
-
-    // async function sendAudioData(audioData) {
-    //     rt.sendAudio(audioData);
-    // }
-/// Speech to Text ^^^^ \\\\\\\\\\\\\\\\\\\\\\\\\\\
-
     if (topicId) {
-        const eventSource = new EventSource(`http://localhost:5000/fetch_story/${topicId}`);
-        eventSource.onmessage = function(event) {
-            console.log('Received:', event.data);
-            // Append data to the container or process it as needed
-            const storyContainer = document.getElementById('story-container');
-            storyContainer.textContent += event.data + ' ';  // Append each word with a space
-        };
-        
-        eventSource.onerror = function() {
-            console.log('Event Source failed');
-            eventSource.close();
-        };
-        
+        axios.get(`http://localhost:5000/fetch_story/${topicId}`)
+            .then(response => {
+                const storyContent = response.data.story; // Adjust according to your response structure
+                const storyContainer = document.getElementById('story-container');
+                displayContentWithAnimation(storyContainer, storyContent); // Update displayContentWithAnimation to handle the received data
+            })
+            .catch(error => {
+                console.error('Error fetching story:', error);
+            });
     }
+    
     const homeButton = document.getElementById('homeButton');
     if (homeButton) {
         homeButton.addEventListener('click', function() {
@@ -161,8 +78,12 @@ function updateImage(storyContent) {
 let cumulativeDelay = 0;
 const wordDisplayInterval = 100; // Interval between words appearing, in milliseconds
 
-function displayContentWithAnimation(container, contentChunk) {
-    const words = contentChunk.split(/\s+/);
+function displayContentWithAnimation(container, content) {
+    // Clear the container first
+    container.innerHTML = '';
+
+    const words = content.split(/\s+/);
+    cumulativeDelay = 0;  // Reset the delay for word animation
 
     words.forEach(word => {
         if (word.length > 0) {
@@ -180,6 +101,7 @@ function displayContentWithAnimation(container, contentChunk) {
         }
     });
 }
+
 
 function displayImage(container, imageUrl) {
     const imgElement = document.createElement('img');
@@ -221,27 +143,31 @@ function displayPage(index) {
 
 function fetchNextPage() {
     console.log('Fetching next page of the story');
-    const userInput = "User's input here"; // Placeholder for actual user input
 
-    const eventSource = new EventSource(`http://localhost:5000/continue_story?user_input=${encodeURIComponent(userInput)}`);
-    
-    eventSource.onmessage = function(event) {
-        console.log('Received:', event.data);
-        // Update the content as it streams in
+    const userInput = userTranscription; // Use the transcribed text
+    console.log('User input:', userInput);
+
+    axios.get(`http://localhost:5000/continue_story`, {
+        params: {
+            user_input: userInput
+        }
+    })
+    .then(response => {
+        const storyContent = response.data.story; // Adjust according to your response structure
         const storyContainer = document.getElementById('story-container');
-        displayContentWithAnimation(storyContainer, event.data); // Update displayContentWithAnimation to handle the streamed data
-    };
-    
-    eventSource.onerror = function() {
-        console.log('Event Source failed');
-        eventSource.close();
-    };
+        displayContentWithAnimation(storyContainer, storyContent); // Update displayContentWithAnimation to handle the received data
+    })
+    .catch(error => {
+        console.error('Error fetching next page:', error);
+    });
 
     // Clear current content to display new page content
     const storyContainer = document.getElementById('story-container');
     storyContainer.innerHTML = '';
     cumulativeDelay = 0;  // Reset the delay for word animation
 }
+
+
 function initialiseSwipeDetection(element) {
     if (!element) return;
 
