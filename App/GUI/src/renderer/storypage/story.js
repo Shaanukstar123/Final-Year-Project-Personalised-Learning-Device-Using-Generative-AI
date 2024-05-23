@@ -12,7 +12,8 @@ messageEl.style.display = "none";
 let isRecording = false;
 let rt;
 let microphone = null;
-let userTranscription = ''; 
+let userTranscription = '';
+let cumulativeDelay = 0;
 
 document.addEventListener('DOMContentLoaded', () => {
     const storyContainer = document.getElementById('story-container');
@@ -27,17 +28,17 @@ document.addEventListener('DOMContentLoaded', () => {
     if (topicId) {
         axios.get(`http://localhost:5000/fetch_story/${topicId}`)
             .then(response => {
-                const storyContent = response.data.story; 
-                const imagePrompt = response.data.imagePrompt; 
-                const storyContainer = document.getElementById('story-container');
-                displayContentWithAnimation(storyContainer, storyContent); 
+                const storyContent = response.data.story;
+                const imagePrompt = response.data.imagePrompt;
+                addPage(storyContent, ''); // Add new page to pages array, initially without image
+                displayContentWithAnimation(storyContainer, storyContent);
                 updateImage(imagePrompt);
             })
             .catch(error => {
                 console.error('Error fetching story:', error);
             });
     }
-    
+
     const homeButton = document.getElementById('homeButton');
     if (homeButton) {
         homeButton.addEventListener('click', function() {
@@ -66,10 +67,11 @@ function fetchNextPage() {
     .then(response => {
         console.log('Next page content:', response.data);
         const storyContent = response.data.story;
-        const imagePrompt = response.data.imagePrompt; 
+        const imagePrompt = response.data.imagePrompt;
         if (storyContent) {
+            addPage(storyContent, ''); // Add new page to pages array, initially without image
             const storyContainer = document.getElementById('story-container');
-            displayContentWithAnimation(storyContainer, storyContent); 
+            displayContentWithAnimation(storyContainer, storyContent);
             updateImage(imagePrompt);
         } else {
             console.error('Story content is undefined');
@@ -84,25 +86,26 @@ function fetchNextPage() {
     storyContainer.innerHTML = '';
     cumulativeDelay = 0;  // Reset the delay for word animation
 }
-// Existing functions from story.js here...
 
 function updateImage(prompt) {
     // Only proceed with the API call if there's a valid description
     if (prompt.length > 0) {
         axios.post('http://localhost:5000/get_image', { text: prompt })
             .then(response => {
-                console.log("image response", response.data)
-                const { imageUrl } = response.data.imageUrl
-                pages[currentPageIndex].imageUrl = imageUrl; // Update current page with the new image URL
-                displayImage(document.getElementById('story-container'), image_url);
+                console.log("image response", response.data);
+                const imageUrl = response.data.imageUrl;
+                
+                // Ensure currentPageIndex is within bounds
+                if (currentPageIndex >= 0 && currentPageIndex < pages.length) {
+                    pages[currentPageIndex].imageUrl = imageUrl; // Update current page with the new image URL
+                    displayImage(document.getElementById('story-container'), imageUrl);
+                } else {
+                    console.error('Page not found at currentPageIndex');
+                }
             })
             .catch(error => console.error('Error fetching image:', error));
     }
 }
-
-
-let cumulativeDelay = 0;
-const wordDisplayInterval = 100; // Interval between words appearing, in milliseconds
 
 function displayContentWithAnimation(container, content) {
     // Clear the container first
@@ -110,7 +113,7 @@ function displayContentWithAnimation(container, content) {
 
     const words = content.split(/\s+/);
     cumulativeDelay = 0;  // Reset the delay for word animation
-
+    const wordDisplayInterval = 100; // Interval in milliseconds between each word
     words.forEach(word => {
         if (word.length > 0) {
             const span = document.createElement('span');
@@ -127,7 +130,6 @@ function displayContentWithAnimation(container, content) {
         }
     });
 }
-
 
 function displayImage(container, imageUrl) {
     const imgElement = document.createElement('img');
@@ -167,9 +169,6 @@ function displayPage(index) {
     }
 }
 
-
-
-
 function initialiseSwipeDetection(element) {
     if (!element) return;
 
@@ -193,7 +192,6 @@ function initialiseSwipeDetection(element) {
         e.preventDefault();
     }, { passive: false });
 }
-
 
 function goToNextPage() {
     if (currentPageIndex < pages.length - 1) {
@@ -239,7 +237,6 @@ function fetchAudioForPage(text) {
         });
     });
 }
-
 
 function playAudio(audioUrl) {
     const audioPlayer = document.getElementById('audioPlayer'); // Ensure this element exists in your HTML
