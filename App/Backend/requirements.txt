@@ -10,3 +10,4 @@ sentence_transformers
 rake_nltk
 matplotlib
 scikit-learn
+google-cloud-texttospeech

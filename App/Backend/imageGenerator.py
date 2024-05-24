@@ -9,8 +9,9 @@ def generateImageWithDALLE(prompt):
     response = client.images.generate(
         prompt=prompt,
         n=1,  # Number of images to generate
-        size="1024x1024",  # Size of the image
-        model = "dall-e-3"
+        size='256×256',  # Size of the image
+        #dalle2
+        model = 'image-dalle-2',
         
     )
     # Assuming the API returns a list of generated images

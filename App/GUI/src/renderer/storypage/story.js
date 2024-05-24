@@ -214,7 +214,7 @@ function goToPreviousPage() {
 
 function fetchAudioForPage(text) {
     return new Promise((resolve, reject) => {
-        // Assuming this endpoint returns a direct link to the audio file
+        // Assuming this endpoint returns the audio content as a blob
         const apiUrl = 'http://localhost:5000/text-to-speech';
         fetch(apiUrl, {
             method: 'POST',

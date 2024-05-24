@@ -7,6 +7,11 @@ from storyChain import initialiseStory, initialiseModel, continueStory
 from imageGenerator import generateImageWithDALLE
 from textSummariser import summariseText
 import assemblyai as aai
+from openai import OpenAI
+from io import BytesIO
+
+from google.oauth2 import service_account
+from google.cloud import texttospeech
 
 import re
 import os
@@ -17,6 +22,8 @@ from dotenv import load_dotenv
 
 app = Flask(__name__)
 CORS(app) 
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "keys/GoogleFypKey.json"
+OpenAI.api_key = os.getenv("OPENAI_API_KEY")
 
 #storyChain = initialiseModel()
 '''ROUTES'''
@@ -54,10 +61,13 @@ def fetch_story(id):
     if match:
         imagePrompt = match.group(1)
         print("match found: ", imagePrompt)
+        #remove image prompt from response
+        #response = re.split(r'dall-e prompt:', response, flags=re.IGNORECASE)[0]
     else:
         imagePrompt = summariseText(response)
         print("No match found: ",imagePrompt)
-    
+
+    #response = cleanUpText(response)
     return jsonify({"story": response, "imagePrompt": imagePrompt})
         
 @app.route('/continue_story', methods=['GET'])
@@ -100,27 +110,38 @@ def get_token():
     else:
         return jsonify({'error': 'Failed to generate token', 'details': response.text}), response.status_code
 
+
+
 @app.route('/text-to-speech', methods=['POST'])
 def text_to_speech():
-    # return jsonify({"message": "Audio file generated"}), 200
-    # ##TEST^^^###
-    voice_id = "onwK4e9ZLuTAKqWW03F9"  # Example: British Daniel
-    url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
-
-    headers = {
-        "Accept": "audio/mpeg",
-        "Content-Type": "application/json",
-        "xi-api-key": os.getenv("ELEVENLABS_API_KEY")
-    }
+    client = OpenAI()
     data = request.json
-    response = requests.post(url, json=data, headers=headers)
+    text = data.get("text", "")
 
-    if response.status_code == 200:
-        return response.content, response.status_code, {'Content-Type': 'audio/mpeg'}
-    else:
-        return jsonify({"error": "Failed to generate speech"}), response.status_code
+    try:
+        # Generate speech using OpenAI's TTS
+        response = client.audio.speech.create(
+            model="tts-1",
+            voice="fable",
+            input=text
+        )
 
-    ##Return the audio file instead 
+        # # Create an in-memory bytes buffer to hold the audio content
+        # audio_content = BytesIO(response.audio_content)
+        # audio_content.seek(0)  # Rewind the buffer to the beginning
+        audio_content = BytesIO()
+            
+            # Stream the response content into the buffer
+        for chunk in response.iter_bytes():
+            audio_content.write(chunk)
+            
+        audio_content.seek(0)  # Rewind the buffer to the beginning
+        print("Audio content generated successfully")
+        return Response(audio_content.read(), mimetype='audio/mpeg')
+
+    except Exception as e:
+        print(f"Failed to generate speech: {e}")
+        return jsonify({"error": "Failed to generate speech"}), 500
     
 '''Helper Functions'''
 
@@ -164,6 +185,12 @@ def generateNextPage(userOutput, chain):
     output = output.split("DALL-E Prompt:")[0]
     return output, image_url
 
+def cleanUpText(text):
+    # Remove any of the words in the list ignoring case
+    removeWords = ["Story:"]
+    for word in removeWords:
+        text = re.sub(rf"\b{word}\b", "", text, flags=re.IGNORECASE)
+    return text
     
     
 if __name__ == "__main__":
