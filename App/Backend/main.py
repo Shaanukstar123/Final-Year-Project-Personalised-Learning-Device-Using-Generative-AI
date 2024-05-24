@@ -56,19 +56,22 @@ def fetch_story(id):
     storyChain = initialiseModel()
     articleContent = getArticleContent(id)
     response = initialiseStory(articleContent, storyChain)
-    promptRegex = re.compile(r'dall-e prompt:\s*(.*)', re.IGNORECASE)
-    match = promptRegex.search(response)
-    if match:
-        imagePrompt = match.group(1)
-        print("match found: ", imagePrompt)
-        #remove image prompt from response
-        #response = re.split(r'dall-e prompt:', response, flags=re.IGNORECASE)[0]
-    else:
+    # promptRegex = re.compile(r'dall-e prompt:\s*(.*)', re.IGNORECASE)
+    # match = promptRegex.search(response)
+    # if match:
+    #     imagePrompt = match.group(1)
+    #     print("match found: ", imagePrompt)
+    # else:
+    #     imagePrompt = summariseText(response)
+    #     print("No match found: ",imagePrompt)
+    print("response before cleanup: ", response)
+    response, imagePrompt, question = cleanResponse(response)
+    if imagePrompt == "":
         imagePrompt = summariseText(response)
         print("No match found: ",imagePrompt)
-
+    print("text after cleanup: ", response)
     #response = cleanUpText(response)
-    return jsonify({"story": response, "imagePrompt": imagePrompt})
+    return jsonify({"story": response, "imagePrompt": imagePrompt, "question": question})
         
 @app.route('/continue_story', methods=['GET'])
 def continue_story():
@@ -185,12 +188,31 @@ def generateNextPage(userOutput, chain):
     output = output.split("DALL-E Prompt:")[0]
     return output, image_url
 
-def cleanUpText(text):
-    # Remove any of the words in the list ignoring case
-    removeWords = ["Story:"]
-    for word in removeWords:
-        text = re.sub(rf"\b{word}\b", "", text, flags=re.IGNORECASE)
-    return text
+def cleanResponse(text):
+    # Convert text to lower case for consistent searching
+    text_lower = text.lower()
+
+    # Find start and end indices for each section
+    dalle_prompt_start = text_lower.find('dall-e prompt:')
+    story_start = text_lower.find('story:')
+    question_start = text_lower.find('question:')
+
+    if dalle_prompt_start == -1 or story_start == -1 or question_start == -1:
+        return "", "", text.strip()
+
+    # Extract DALL-E Prompt
+    dalle_prompt = text[dalle_prompt_start + len('dall-e prompt:'):story_start].strip()
+
+    # Extract Question
+    question = text[question_start + len('question:'):].strip()
+
+    # Extract STORY content
+    story_content = text[story_start + len('story:'):question_start].strip()
+
+    # Remove other words with colons from STORY content
+    cleaned_response = re.sub(r'\b\w+:\s*', '', story_content)
+
+    return cleaned_response.strip(), dalle_prompt, question 
     
     
 if __name__ == "__main__":
