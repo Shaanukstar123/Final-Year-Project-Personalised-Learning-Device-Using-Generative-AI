@@ -33,7 +33,7 @@ def generateTitleWithLangChain(articles):
     prompt = ChatPromptTemplate.from_messages([
         ("system", '''You are a topic chooser for a children's app. Given a list of article names and id, choose the articles that best represent an open topic that is diverse and suitable
          for a 7-12 year old age group. Replace the chosen article names with the representative topic name and replace the other names with '_'. The topic name should be simple (one or two words) but 
-         encapsulating the article's main subject. Return list in the same json format as input (id: new name)'''),
+         encapsulating the article's main subject. Always return in the same json format as input (id: new name). Keep the formatting the same or else the system will not be able to read it.'''),
         ("user", dictToString)
     ])
 

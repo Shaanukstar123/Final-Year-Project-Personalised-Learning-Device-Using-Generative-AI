@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-client = OpenAI(os.getenv("OPENAI_API_KEY"))
+client = OpenAI(api_key= os.getenv("OPENAI_API_KEY"))
 
 def generateImageWithDALLE(prompt):
     #return "https://contenthub-static.grammarly.com/blog/wp-content/uploads/2020/10/Write-a-Story.jpg"

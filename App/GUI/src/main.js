@@ -3,6 +3,8 @@ const fs = require('fs');
 
 const path = require('path');
 
+let isCacheCleared = false;
+
 require('electron-reload')(__dirname, {
   electron: require(`${__dirname}/../node_modules/electron`)
 });
@@ -44,14 +46,9 @@ function createWindow () {
 
   ////LOCAL STORAGE:
   const clearLocalStorage = `
-  if (!localStorage.getItem('cacheCleared')) {
     localStorage.clear();
-    localStorage.setItem('cacheCleared', 'true');
     console.log('LocalStorage cleared successfully');
-  } else {
-    console.log('LocalStorage not cleared, already cleared this session');
-  }
-`;
+  `;
 
 //
   // Create the browser window.
@@ -76,8 +73,15 @@ function createWindow () {
 
   //LOCAL STORAGE:
   mainWindow.webContents.on('did-finish-load', () => {
-    mainWindow.webContents.executeJavaScript(clearLocalStorage)
-      .catch(error => console.error('Error clearing LocalStorage:', error));
+    if (!isCacheCleared) {
+      mainWindow.webContents.executeJavaScript(clearLocalStorage)
+        .then(() => {
+          isCacheCleared = true;
+        })
+        .catch(error => console.error('Error clearing LocalStorage:', error));
+    } else {
+      console.log('LocalStorage not cleared, already cleared this session');
+    }
   });
 
   //
