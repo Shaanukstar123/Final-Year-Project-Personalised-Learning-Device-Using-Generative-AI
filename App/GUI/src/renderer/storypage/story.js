@@ -177,20 +177,24 @@ function initialiseSwipeDetection(element) {
 
     hammer.on('swipeleft', function(ev) {
         console.log('Swiped left');
-        ev.preventDefault();  // Prevent the default scroll behavior
-        goToNextPage();
+        if (Math.abs(ev.deltaX) > Math.abs(ev.deltaY)) {
+            ev.preventDefault();  // Prevent the default behavior only if the swipe is more horizontal than vertical
+            goToNextPage();
+        }
     });
 
     hammer.on('swiperight', function(ev) {
         console.log('Swiped right');
-        ev.preventDefault();  // Prevent the default scroll behavior
-        goToPreviousPage();
+        if (Math.abs(ev.deltaX) > Math.abs(ev.deltaY)) {
+            ev.preventDefault();  // Prevent the default behavior only if the swipe is more horizontal than vertical
+            goToPreviousPage();
+        }
     });
 
-    // Optionally, prevent touch scrolling on this element
-    element.addEventListener('touchmove', function(e) {
-        e.preventDefault();
-    }, { passive: false });
+    // // Optionally, prevent touch scrolling on this element
+    // element.addEventListener('touchmove', function(e) {
+    //     e.preventDefault();
+    // }, { passive: false });
 }
 
 function goToNextPage() {

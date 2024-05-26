@@ -58,6 +58,7 @@ function createWindow () {
       nodeIntegration: true, // Enable Node integration
       contextIsolation: false, // Disable context isolation
       enableRemoteModule: false, // turn off remote
+      enableTouchEmulation: true, // Ensure touch events are enabled
 
     },
     width: 800,

@@ -48,9 +48,22 @@ html,
 */
 
 body {
-  margin: 0; /* 1 */
-  line-height: inherit; /* 2 */
-  overflow: hidden; /* Prevents scrolling */
+  overflow-y: scroll; /* Enable vertical scrolling */
+  -ms-overflow-style: none;  /* For Internet Explorer and Edge */
+  scrollbar-width: none;  /* For Firefox */
+}
+
+body::-webkit-scrollbar {
+  display: none; /* Hide scrollbar in Chrome */
+}
+
+/* Hide scrollbar for Internet Explorer and Edge */
+body {
+  -ms-overflow-style: none;
+}
+
+body {
+  scrollbar-width: none;
 }
 
 /*
@@ -634,15 +647,16 @@ video {
 
 /* General styles for all topic blocks */
 .topic-block {
-  margin-top: 1vw;
+  margin-top: 3vw;
   margin-bottom: 1vw; 
-  width : 40vw;
-  height: 20vw;
-  border-radius: 20px;
+  width : 100%;
+  height: 25vw;
+  border-radius: 40px;
   background-size: cover;
   background-position: center;
   color: white;
   display: flex;
+
 }
 
 .topic-button {
@@ -656,6 +670,28 @@ video {
   color: white;
   display: flex;
 
+}
+
+/* Styles for the search bar */
+.search-bar-container input {
+  /*make it larger*/
+  width: 50%; /* Full width */
+  height: 30px; /* Set height */
+  /* Center the text */
+  text-align: center;
+  /*Centre the search bar*/
+  margin-left: 25%;
+  /*Move whole search bar down*/
+  margin-top: 3%;
+  font-size: 0.8rem; /* Increase font size */
+  background-color: #fff; /* White background */
+  border: none; /* Remove border */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Add subtle shadow */
+  transition: box-shadow 0.3s ease; /* Smooth transition for shadow */
+}
+
+.search-bar-container input:focus {
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2); /* Larger shadow on focus */
 }
 
 /* Container for bottom topics */

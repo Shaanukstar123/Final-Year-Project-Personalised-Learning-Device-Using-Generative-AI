@@ -11,10 +11,12 @@ def generateImageWithDALLE(prompt):
     #return "https://contenthub-static.grammarly.com/blog/wp-content/uploads/2020/10/Write-a-Story.jpg"
     response = client.images.generate(
         prompt=prompt,
+        model = 'dall-e-3',
         n=1,  # Number of images to generate
-        size='256×256',  # Size of the image
+        size='1024x1024',  # Size of the image
+        quality= 'standard'
         #dalle2
-        model = 'image-dalle-2',
+        # model = 'image-dalle-2',
         
     )
     # Assuming the API returns a list of generated images

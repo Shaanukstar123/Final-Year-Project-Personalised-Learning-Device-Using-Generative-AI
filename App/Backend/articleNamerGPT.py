@@ -1,10 +1,10 @@
 from langchain_openai import AzureChatOpenAI  # Adjust based on actual import paths
-from langchain_core.output_parsers import StrOutputParser
+from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 import os
 import json
 from dotenv import load_dotenv
-
+import time
 
 # Import the necessary LangChain components
 
@@ -16,7 +16,7 @@ def initialiseAzureModel():
         azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
         azure_deployment="StoryGPT3"
     )
-    output_parser = StrOutputParser()  # Converts output to string
+    output_parser = JsonOutputParser()  # Converts output to JSON
     return llm, output_parser
 
 def generateTitleWithLangChain(articles):
@@ -25,22 +25,26 @@ def generateTitleWithLangChain(articles):
     llm, output_parser = initialiseAzureModel()
 
     # Convert article list to a string format acceptable by our prompt
-    dictToString = ""
-    for article in articles:
-        dictToString += str(article['id']) + ":" + article['name'] + ", "
+    dictToString = json.dumps({article['id']: article['name'] for article in articles})
 
     # Define the prompt template for topic choosing
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", '''You are a topic chooser for a children's app. Given a list of article names and id, choose the articles that best represent an open topic that is diverse and suitable
-         for a 7-12 year old age group. Replace the chosen article names with the representative topic name and replace the other names with '_'. The topic name should be simple (one or two words) but 
-         encapsulating the article's main subject. Always return in the same json format as input (id: new name). Keep the formatting the same or else the system will not be able to read it.'''),
-        ("user", dictToString)
-    ])
+    prompt_template = '''
+        You are a topic chooser for a children's app. Given a list of article names and ids in JSON format, choose only the most interesting articles that best represent an open topic that is diverse and suitable
+        for a 7-12 year old age group. Replace the chosen article names with the representative topic name and replace the other names with '_'. 
+        The topic name must be original (no duplicates) but also simple (one or two words) and
+        encapsulating the article's main subject (e.g. Space mission, New Bacteria, Killer Whale). Always return in the same JSON format as input (id: new name). Keep the formatting the same or else the system will not be able to read it.
+        Here is the list: {articles}
+    '''
+
+    prompt = ChatPromptTemplate.from_template(prompt_template)
+    input_variables = {"articles": dictToString}
 
     # Main Chain
     chain = prompt | llm | output_parser
-    output = chain.invoke({})
-    # print("Output: ", output)
+    output = chain.invoke(input_variables)
+    
+    # Print and return the output
+    print("Output: ", output)
     return output
 
 def getArticles(dir):
@@ -48,33 +52,32 @@ def getArticles(dir):
         articles = json.load(file)
     return articles
 
-def addNewNames(nameList, dir):
-    if "\n" in nameList:
-        nameList = nameList.split('\n')
-    else:
-        nameList = nameList.split(',')
+def addNewNames(nameDict, dir):
     articleDict = {}
     try:
-        for item in nameList:
-            if ':' in item:
-                id, new_name = item.split(':')
-                articleDict[int(id)] = new_name.strip()
-            else:
-                raise ValueError("Incorrectly formatted item: " + item)
+        for id, new_name in nameDict.items():
+            articleDict[int(id)] = new_name.strip()
     except ValueError as e:
         print("Error:", e)
         print("Reprompting GPT to resend the correct format...")
+        time.sleep(2)
         generateNewNames()
         return
 
     with open(dir, 'r') as file:
         articles = json.load(file)
-        for article in articles:
-            if article['id'] in articleDict:
+        
+    updated_articles = []
+    for article in articles:
+        if article['id'] in articleDict:
+            if articleDict[article['id']] != "_":
                 article['new_title'] = articleDict[article['id']]
+                updated_articles.append(article)
+        else:
+            updated_articles.append(article)
 
     with open(dir, 'w') as file:
-        json.dump(articles, file, indent=2)
+        json.dump(updated_articles, file, indent=2)
 
 
 def generateNewNames():
@@ -82,5 +85,3 @@ def generateNewNames():
     articles = getArticles(dir)
     newNames = generateTitleWithLangChain(articles)
     addNewNames(newNames, dir)
-
-#generateNewNames()
