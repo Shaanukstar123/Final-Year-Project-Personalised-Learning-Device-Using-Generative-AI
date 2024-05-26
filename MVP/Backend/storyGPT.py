@@ -1,7 +1,12 @@
 from openai import OpenAI
 import json
+import os
+from dotenv import load_dotenv
 
-client = OpenAI(api_key='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')
+#load dotenv
+load_dotenv()
+
+client = OpenAI(os.getenv("OPENAI_API_KEY"))
 
 def generateStoryWithGPT(article):
     messages =[{"role": "user", "content": article}, {"role": "system", "content": 

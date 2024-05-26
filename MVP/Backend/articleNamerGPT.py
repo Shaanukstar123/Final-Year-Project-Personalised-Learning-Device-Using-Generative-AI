@@ -2,8 +2,11 @@
 
 from openai import OpenAI
 import json
+import os
+from dotenv import load_dotenv
 
-client = OpenAI(api_key='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')
+load_dotenv()
+client = OpenAI(os.getenv("OPENAI_API_KEY"))
 messages = []
 role= {"role": "system", "content": "You are a topic chooser for a children's app. "
      +"Given a list of article names and id, choose the articles that best represent trending topics around the world that "

@@ -1,8 +1,11 @@
 from flask import Flask, jsonify
 from openai import OpenAI
 import os
+from dotenv import load_dotenv
 
-client = OpenAI(api_key="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")
+load_dotenv()
+
+client = OpenAI(os.getenv("OPENAI_API_KEY"))
 
 def generateImageWithDALLE(prompt):
     #return "https://contenthub-static.grammarly.com/blog/wp-content/uploads/2020/10/Write-a-Story.jpg"

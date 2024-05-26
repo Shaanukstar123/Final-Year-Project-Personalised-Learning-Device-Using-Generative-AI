@@ -21,7 +21,8 @@ from dotenv import load_dotenv
 
 
 app = Flask(__name__)
-CORS(app) 
+CORS(app)
+load_dotenv()
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "keys/GoogleFypKey.json"
 OpenAI.api_key = os.getenv("OPENAI_API_KEY")
 

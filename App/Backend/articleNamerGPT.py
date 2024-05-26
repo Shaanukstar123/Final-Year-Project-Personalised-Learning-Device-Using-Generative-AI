@@ -31,13 +31,16 @@ def generateTitleWithLangChain(articles):
 
     # Define the prompt template for topic choosing
     prompt = ChatPromptTemplate.from_messages([
-        ("system", "You are a topic chooser for a children's app. Given a list of article names and id, choose the articles that best represent trending topics around the world that kids would find interesting. Replace the names with a trending topic name and the other names replace with '_'. The name should represent what's trending around the world today relating to this news. Return in the same format and length. The topics should be very basic but also informative. E.g., Article about National Cinema Day = 'Cinema'. Return list of id: new name"),
+        ("system", '''You are a topic chooser for a children's app. Given a list of article names and id, choose the articles that best represent an open topic that is diverse and suitable
+         for a 7-12 year old age group. Replace the chosen article names with the representative topic name and replace the other names with '_'. The topic name should be simple (one or two words) but 
+         encapsulating the article's main subject. Return list in the same json format as input (id: new name)'''),
         ("user", dictToString)
     ])
 
     # Main Chain
     chain = prompt | llm | output_parser
     output = chain.invoke({})
+    # print("Output: ", output)
     return output
 
 def getArticles(dir):

@@ -43,10 +43,15 @@ function clearCache() {
 function createWindow () {
 
   ////LOCAL STORAGE:
-//   const clearLocalStorage = `
-//   localStorage.clear();
-//   console.log('LocalStorage cleared successfully');
-// `;
+  const clearLocalStorage = `
+  if (!localStorage.getItem('cacheCleared')) {
+    localStorage.clear();
+    localStorage.setItem('cacheCleared', 'true');
+    console.log('LocalStorage cleared successfully');
+  } else {
+    console.log('LocalStorage not cleared, already cleared this session');
+  }
+`;
 
 //
   // Create the browser window.
@@ -70,10 +75,10 @@ function createWindow () {
   mainWindow.loadFile('src/renderer/homepage/index.html');
 
   //LOCAL STORAGE:
-  // mainWindow.webContents.on('did-finish-load', () => {
-  //   mainWindow.webContents.executeJavaScript(clearLocalStorage)
-  //     .catch(error => console.error('Error clearing LocalStorage:', error));
-  // });
+  mainWindow.webContents.on('did-finish-load', () => {
+    mainWindow.webContents.executeJavaScript(clearLocalStorage)
+      .catch(error => console.error('Error clearing LocalStorage:', error));
+  });
 
   //
  // mainWindow.setMenu(null); 
