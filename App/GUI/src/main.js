@@ -9,39 +9,6 @@ require('electron-reload')(__dirname, {
   electron: require(`${__dirname}/../node_modules/electron`)
 });
 
-function clearCache() {
-  localStorage.clear();
-  // var remote = require('remote'); 
-  // var win = remote.getCurrentWindow();
-  // win.webContents.session.clearCache(function(){
-  // //some callback.
-  // });
-  console.log('Clearing cache...');
-  // const cachePath = path.join(app.getPath('userData'), 'Local Storage');
-
-  // try {
-  //   if (fs.existsSync(cachePath)) {
-  //     console.log(`Cache path found: ${cachePath}`);
-  //     fs.readdirSync(cachePath).forEach((file) => {
-  //       const filePath = path.join(cachePath, file);
-  //       console.log(`Deleting file: ${filePath}`);
-  //       try {
-  //         fs.unlinkSync(filePath);
-  //         console.log(`Deleted file: ${filePath}`);
-  //       } catch (unlinkError) {
-  //         console.error(`Error deleting file ${filePath}:`, unlinkError);
-  //       }
-  //     });
-  //     console.log('Cache cleared successfully');
-  //   } else {
-  //     console.log('Cache path does not exist');
-  //   }
-  // } catch (error) {
-  //   console.error('Error clearing cache:', error);
-  // }
-}
-
-
 function createWindow () {
 
   ////LOCAL STORAGE:

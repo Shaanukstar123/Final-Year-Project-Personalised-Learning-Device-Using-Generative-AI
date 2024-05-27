@@ -748,11 +748,13 @@ video {
   width: 100%; /* Ensure full width for center alignment */
 }
 .story-page {
-  background-image: url('../images/storypage/stainedPaper.jpg');
+  /* background-image: url('../images/storypage/stainedPaper.jpg'); */
+  background-color: #f7f3db;
   font-family: 'Times New Roman', Times, serif;
   font-size: large;
   height:200vh;
   width:100vw;
+  /*no margin*/
 
 }
 /* .story-container{

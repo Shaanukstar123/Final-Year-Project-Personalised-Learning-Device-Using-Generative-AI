@@ -46,7 +46,7 @@ def get_topics():
 def get_image():
     prompt = request.json.get('text', '')
     # Assume generateImage returns a URL to an image or saves the image and returns its path
-    dallePrompt = "2D cartoon child-friendly image of this description: " + prompt
+    dallePrompt = "2D cartoon child-friendly image of this description: " + prompt + " No text."
     imageUrl = generateImageWithDALLE(dallePrompt)
     return jsonify({'imageUrl': imageUrl})
 

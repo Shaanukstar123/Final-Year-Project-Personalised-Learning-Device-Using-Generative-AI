@@ -20,29 +20,51 @@ document.addEventListener('DOMContentLoaded', () => {
     storyContainer.style.fontFamily = 'Comic Sans MS';
     const params = new URLSearchParams(window.location.search);
     const topicId = params.get('topicId');
-    const buttonEl = document.getElementById("speak"); // ID corrected for the speak button
-    const messageEl = document.getElementById("textarea"); // ID corrected for the message display area
+    const buttonEl = document.getElementById("speak");
+    const messageEl = document.getElementById("textarea");
     let isRecording = false;
     buttonEl.addEventListener("click", () => run());
 
     if (topicId) {
-        axios.get(`http://localhost:5000/fetch_story/${topicId}`)
-            .then(response => {
-                const storyContent = response.data.story;
-                const imagePrompt = response.data.imagePrompt;
-                addPage(storyContent, ''); // Add new page to pages array, initially without image
-                displayContentWithAnimation(storyContainer, storyContent);
-                updateImage(imagePrompt);
-            })
-            .catch(error => {
-                console.error('Error fetching story:', error);
-            });
+        const cachedStory = localStorage.getItem(`story_${topicId}`);
+        if (cachedStory) {
+            const storyData = JSON.parse(cachedStory);
+            const storyContent = storyData.story + storyData.question;
+            addPage(storyContent, storyData.imagePrompt, storyData.imagePrompt, storyData.audioUrl)
+                .then(() => {
+                    displayContentWithAnimation(storyContainer, storyContent);
+                    if (storyData.audioUrl) {
+                        playAudio(storyData.audioUrl);
+                    }
+                });
+        } else {
+            axios.get(`http://localhost:5000/fetch_story/${topicId}`)
+                .then(response => {
+                    const storyContent = response.data.story + response.data.question;
+                    const imagePrompt = response.data.imagePrompt;
+                    const storyData = {
+                        story: response.data.story,
+                        question: response.data.question,
+                        imagePrompt: imagePrompt,
+                        audioUrl: ''
+                    };
+                    localStorage.setItem(`story_${topicId}`, JSON.stringify(storyData));
+                    addPage(storyContent, imagePrompt, '', '')
+                        .then(() => {
+                            displayContentWithAnimation(storyContainer, storyContent);
+                            updateImage(imagePrompt);
+                        });
+                })
+                .catch(error => {
+                    console.error('Error fetching story:', error);
+                });
+        }
     }
 
     const homeButton = document.getElementById('homeButton');
     if (homeButton) {
         homeButton.addEventListener('click', function() {
-            window.location.href = '../homepage/index.html'; // Adjust the path as needed
+            window.location.href = '../homepage/index.html';
         });
     }
 
@@ -73,6 +95,15 @@ function fetchNextPage() {
             const storyContainer = document.getElementById('story-container');
             displayContentWithAnimation(storyContainer, storyContent);
             updateImage(imagePrompt);
+
+            const topicId = new URLSearchParams(window.location.search).get('topicId');
+            if (topicId) {
+                const cachedStory = localStorage.getItem(`story_${topicId}`);
+                let storyData = cachedStory ? JSON.parse(cachedStory) : { story: '', question: '', imagePrompt: '', audioUrl: '' };
+                storyData.story += ' ' + storyContent;
+                storyData.imagePrompt = imagePrompt;
+                localStorage.setItem(`story_${topicId}`, JSON.stringify(storyData));
+            }
         } else {
             console.error('Story content is undefined');
         }
@@ -88,24 +119,128 @@ function fetchNextPage() {
 }
 
 function updateImage(prompt) {
-    // Only proceed with the API call if there's a valid description
-    if (prompt.length > 0) {
-        axios.post('http://localhost:5000/get_image', { text: prompt })
-            .then(response => {
-                console.log("image response", response.data);
-                const imageUrl = response.data.imageUrl;
-                
-                // Ensure currentPageIndex is within bounds
-                if (currentPageIndex >= 0 && currentPageIndex < pages.length) {
-                    pages[currentPageIndex].imageUrl = imageUrl; // Update current page with the new image URL
-                    displayImage(document.getElementById('story-container'), imageUrl);
-                } else {
-                    console.error('Page not found at currentPageIndex');
-                }
-            })
-            .catch(error => console.error('Error fetching image:', error));
-    }
+    return new Promise((resolve, reject) => {
+        if (prompt.length > 0) {
+            const topicId = new URLSearchParams(window.location.search).get('topicId');
+            const currentPage = currentPageIndex; // Get the current page index
+            const cachedStory = localStorage.getItem(`story_${topicId}`);
+            let storyData = cachedStory ? JSON.parse(cachedStory) : { pages: [] };
+
+            // Ensure the pages array exists
+            if (!storyData.pages) {
+                storyData.pages = [];
+            }
+
+            // Check if the image for the current page is already cached
+            if (storyData.pages[currentPage] && storyData.pages[currentPage].imageUrl) {
+                pages[currentPage].imageUrl = storyData.pages[currentPage].imageUrl;
+                displayImage(document.getElementById('story-container'), storyData.pages[currentPage].imageUrl);
+                resolve();
+            } else {
+                axios.post('http://localhost:5000/get_image', { text: prompt })
+                    .then(response => {
+                        console.log("image response", response.data);
+                        const imageUrl = response.data.imageUrl;
+
+                        if (currentPage >= 0 && currentPage < pages.length) {
+                            pages[currentPage].imageUrl = imageUrl; // Update current page with the new image URL
+                            displayImage(document.getElementById('story-container'), imageUrl);
+
+                            // Cache the new image URL for the current page of the current story
+                            if (!storyData.pages[currentPage]) {
+                                storyData.pages[currentPage] = {};
+                            }
+                            storyData.pages[currentPage].imageUrl = imageUrl;
+                            localStorage.setItem(`story_${topicId}`, JSON.stringify(storyData));
+                            resolve();
+                        } else {
+                            console.error('Page not found at currentPageIndex');
+                            reject();
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching image:', error);
+                        reject(error);
+                    });
+            }
+        } else {
+            resolve();
+        }
+    });
 }
+
+function updateImageForPage(pageIndex, dallePrompt) {
+    return new Promise((resolve, reject) => {
+        const topicId = new URLSearchParams(window.location.search).get('topicId');
+        if (topicId) {
+            const cachedStory = localStorage.getItem(`story_${topicId}`);
+            let storyData = cachedStory ? JSON.parse(cachedStory) : { pages: [] };
+
+            // Ensure the pages array exists
+            if (!storyData.pages) {
+                storyData.pages = [];
+            }
+
+            if (storyData.pages[pageIndex] && storyData.pages[pageIndex].imageUrl) {
+                pages[pageIndex].imageUrl = storyData.pages[pageIndex].imageUrl;
+                displayImage(document.getElementById('story-container'), storyData.pages[pageIndex].imageUrl);
+                resolve();
+            } else {
+                if (dallePrompt) {
+                    updateImage(dallePrompt).then(resolve).catch(reject);
+                } else {
+                    resolve();
+                }
+            }
+        } else {
+            resolve();
+        }
+    });
+}
+
+
+function addPage(content, dallePrompt = '', imageUrl = '', audioUrl = '') {
+    return new Promise((resolve, reject) => {
+        pages.push({ content, imageUrl, audioUrl });
+        currentPageIndex = pages.length - 1;
+        if (!audioUrl) {
+            fetchAudioForPage(content).then(audioUrl => {
+                pages[currentPageIndex].audioUrl = audioUrl;
+                if (currentPageIndex === pages.length - 1) {
+                    playAudio(audioUrl);
+                    updateAudioButtonVisibility();
+                }
+            });
+        } else {
+            if (currentPageIndex === pages.length - 1) {
+                playAudio(audioUrl);
+                updateAudioButtonVisibility();
+            }
+        }
+        displayPage(currentPageIndex);
+        // Ensure the image is updated and cached if not already cached
+        const topicId = new URLSearchParams(window.location.search).get('topicId');
+        const cachedStory = localStorage.getItem(`story_${topicId}`);
+        let storyData = cachedStory ? JSON.parse(cachedStory) : { pages: [] };
+
+        // Ensure the pages array exists
+        if (!storyData.pages) {
+            storyData.pages = [];
+        }
+
+        // Ensure the specific page object exists in the pages array
+        if (!storyData.pages[currentPageIndex]) {
+            storyData.pages[currentPageIndex] = {};
+        }
+
+        if (!storyData.pages[currentPageIndex].imageUrl) {
+            updateImageForPage(currentPageIndex, dallePrompt).then(resolve).catch(reject);
+        } else {
+            resolve();
+        }
+    });
+}
+
 
 function displayContentWithAnimation(container, content) {
     // Clear the container first
@@ -132,26 +267,23 @@ function displayContentWithAnimation(container, content) {
 }
 
 function displayImage(container, imageUrl) {
-    const imgElement = document.createElement('img');
-    imgElement.src = imageUrl;
-    imgElement.style.width = '100%';
-    imgElement.style.height = 'auto';
-    imgElement.style.marginTop = '20px';
-    container.appendChild(imgElement);
+    const existingImage = container.querySelector('img');
+    if (existingImage) {
+        existingImage.src = imageUrl;
+    } else {
+        const imgElement = document.createElement('img');
+        imgElement.src = imageUrl;
+        imgElement.style.width = '65%';
+        imgElement.style.height = '10%';
+        imgElement.style.marginTop = '20px';
+        imgElement.style.display = 'block';
+        imgElement.style.marginLeft = 'auto';
+        imgElement.style.marginRight = 'auto';
+        imgElement.style.border = '2px solid black';
+        container.appendChild(imgElement);
+    }
 }
 
-function addPage(content, imageUrl) {
-    pages.push({ content, imageUrl, audioUrl: '' });
-    currentPageIndex = pages.length - 1;
-    fetchAudioForPage(content).then(audioUrl => {
-        pages[currentPageIndex].audioUrl = audioUrl;
-        if (currentPageIndex === pages.length - 1) {
-            playAudio(audioUrl);
-            updateAudioButtonVisibility();
-        }
-    });
-    displayPage(currentPageIndex);
-}
 
 function displayPage(index) {
     const storyContainer = document.getElementById('story-container');
@@ -233,6 +365,16 @@ function fetchAudioForPage(text) {
         })
         .then(blob => {
             const audioUrl = URL.createObjectURL(blob);
+
+            // Cache the audio URL
+            const topicId = new URLSearchParams(window.location.search).get('topicId');
+            if (topicId) {
+                const cachedStory = localStorage.getItem(`story_${topicId}`);
+                let storyData = cachedStory ? JSON.parse(cachedStory) : { story: '', question: '', imagePrompt: '', audioUrl: '' };
+                storyData.audioUrl = audioUrl;
+                localStorage.setItem(`story_${topicId}`, JSON.stringify(storyData));
+            }
+
             resolve(audioUrl);
         })
         .catch(error => {
