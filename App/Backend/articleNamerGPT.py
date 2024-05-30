@@ -29,9 +29,9 @@ def generateTitleWithLangChain(articles):
 
     # Define the prompt template for topic choosing
     prompt_template = '''
-        You are a topic chooser for a children's app. Given a list of article names and ids in JSON format, choose only the most interesting articles that best represent an open topic that is diverse and suitable
-        for a 7-12 year old age group. These are webscraped articles so ignore quizzes and videos. Replace the chosen article names with the representative topic name and replace the other names with '_'. 
-        The topic name must be original (no duplicates) but also simple (one or two words) and
+        You are a topic chooser for a children's app. Given a list of article names and ids in JSON format, choose only interesting articles that best represent an open topic that is diverse and suitable
+        for a 7-12 year old age group. Ignore quizzes and videos. Replace the chosen article names with a 1-2 word representative topic name and replace the other names with '_'. 
+        The topic name must be original (no duplicates) but also simple.
         encapsulating the article's main subject (e.g. Space mission, New Bacteria, Killer Whale). Always return in the same JSON format as input (id: new name). Keep the formatting the same or else the system will not be able to read it.
         Here is the list: {articles}
     '''
