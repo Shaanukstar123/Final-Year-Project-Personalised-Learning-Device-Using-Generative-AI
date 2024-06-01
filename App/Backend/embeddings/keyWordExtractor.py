@@ -198,7 +198,7 @@ def split_text(text, chunk_size=5):
     return chunks
 
 # LDA implementation
-def get_topics(texts, num_topics=2, top_n_words=10, max_df=0.85, min_df=1):
+def get_topics(texts, num_topics=2, top_n_words=5, max_df=0.85, min_df=1):
     vectorizer = CountVectorizer(max_df=max_df, min_df=min_df, stop_words='english')
     dtm = vectorizer.fit_transform(texts)
     

@@ -17,6 +17,8 @@ function getTopicsFromAPI() {
                 })
                 .catch(error => console.error('Error fetching topics:', error));
         }
+        setupClusterButton();
+
     });
 }
 
@@ -59,5 +61,19 @@ function handleButtonClick(event) {
     window.location.href = `../storypage/story.html?topicId=${encodeURIComponent(topicId)}`;
 }
 
-getTopicsFromAPI();
+function setupClusterButton() {
+    const clusterButton = document.getElementById('cluster-button');
+    if (clusterButton) {
+        clusterButton.addEventListener('click', () => {
+            axios.get('http://localhost:5000/run_clustering')
+                .then(response => {
+                    console.log("Clustering run successfully:", response.data);
+                })
+                .catch(error => {
+                    console.error("Error running clustering:", error);
+                });
+        });
+    }
+}
 
+getTopicsFromAPI();

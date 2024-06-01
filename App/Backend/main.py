@@ -7,6 +7,7 @@ from storyChain import initialiseStory, initialiseModel, continueStory
 from imageGenerator import generateImageWithDALLE
 from textSummariser import summariseText
 from database import initialiseDatabase
+from clustering import run_clustering_on_db
 import assemblyai as aai
 from openai import OpenAI
 from io import BytesIO
@@ -144,7 +145,16 @@ def clear_db():
         return jsonify({"message": "Database cleared successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
 
+@app.route('/run_clustering', methods=['GET'])
+def run_clustering():
+    try:
+        run_clustering_on_db()
+        return jsonify({"message": "Clustering run successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
     
 '''Helper Functions'''
 
