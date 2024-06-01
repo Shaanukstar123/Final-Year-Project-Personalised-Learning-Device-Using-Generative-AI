@@ -6,6 +6,7 @@ from articleNamerGPT import generateNewNames
 from storyChain import initialiseStory, initialiseModel, continueStory
 from imageGenerator import generateImageWithDALLE
 from textSummariser import summariseText
+from database import initialiseDatabase
 import assemblyai as aai
 from openai import OpenAI
 from io import BytesIO
@@ -17,6 +18,7 @@ import re
 import os
 import json
 import requests
+import sqlite3
 from dotenv import load_dotenv
 
 
@@ -57,28 +59,17 @@ def fetch_story(id):
     storyChain = initialiseModel()
     articleContent = getArticleContent(id)
     response = initialiseStory(articleContent, storyChain)
-    # promptRegex = re.compile(r'dall-e prompt:\s*(.*)', re.IGNORECASE)
-    # match = promptRegex.search(response)
-    # if match:
-    #     imagePrompt = match.group(1)
-    #     print("match found: ", imagePrompt)
-    # else:
-    #     imagePrompt = summariseText(response)
-    #     print("No match found: ",imagePrompt)
-    print("response before cleanup: ", response)
     response, imagePrompt, question = cleanResponse(response)
     if imagePrompt == "":
         imagePrompt = summariseText(response)
-        print("No match found: ",imagePrompt)
-    print("text after cleanup: ", response)
-    #response = cleanUpText(response)
+    store_story(id, response, imagePrompt, "", question)
     return jsonify({"story": response, "imagePrompt": imagePrompt, "question": question})
+
         
 @app.route('/continue_story', methods=['GET'])
 def continue_story():
     global storyChain
     user_input = request.args.get('user_input', '')
-    print(f"Received user input: {user_input}")
     response = continueStory(storyChain, user_input)
     promptRegex = re.compile(r'dall-e prompt:\s*(.*)', re.IGNORECASE)
     match = promptRegex.search(response)
@@ -86,9 +77,8 @@ def continue_story():
         imagePrompt = match.group(1)
     else:
         imagePrompt = summariseText(response)
-    
+    append_story(user_input, response, imagePrompt)
     return jsonify({"story": response, "imagePrompt": imagePrompt})
-
 
 #Speech to text api token fetcher
 @app.route('/get_token', methods=['GET'])
@@ -147,7 +137,51 @@ def text_to_speech():
         print(f"Failed to generate speech: {e}")
         return jsonify({"error": "Failed to generate speech"}), 500
     
+@app.route('/clear_database', methods=['POST'])
+def clear_db():
+    try:
+        clear_database()
+        return jsonify({"message": "Database cleared successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    
 '''Helper Functions'''
+
+def store_story(topic_id, story, image_prompt, image_url, question):
+    conn = sqlite3.connect('data/stories.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT INTO stories (topic_id, story, image_prompt, image_url, question)
+        VALUES (?, ?, ?, ?, ?)
+    ''', (topic_id, story, image_prompt, image_url, question))
+    conn.commit()
+    conn.close()
+
+def append_story(topic_id, story, image_prompt):
+    conn = sqlite3.connect('data/stories.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT story FROM stories WHERE topic_id = ?
+    ''', (topic_id,))
+    result = cursor.fetchone()
+    if result:
+        current_story = result[0] + ' ' + story
+        cursor.execute('''
+            UPDATE stories
+            SET story = ?, image_prompt = ?
+            WHERE topic_id = ?
+        ''', (current_story, image_prompt, topic_id))
+        conn.commit()
+    conn.close()
+
+def clear_database():
+    conn = sqlite3.connect('data/stories.db')
+    cursor = conn.cursor()
+    cursor.execute('DELETE FROM stories')
+    conn.commit()
+    conn.close()
+
 
 def getArticleContent(id):
     with open('data/output.json', 'r') as file:
@@ -167,27 +201,6 @@ def generateImage(text):
     print("No DALLE prompt")
     dallePrompt = summariseText(text)
     return dallePrompt
-
-def generateFirstPage(article, chain):
-    # Generate story
-    print("Generating story...")
-    story = initialiseStory(article, chain)
-    print(story)
-
-    dallePrompt = generateImage(story)
-    # Generate image
-    fullDallePrompt= "2D cartoon child-friendly image with no text of this story: " + dallePrompt
-    print("Generating image...")
-    image_url = generateImageWithDALLE(fullDallePrompt)
-    story = re.split(r"dall-e prompt:", story, flags=re.IGNORECASE)[0]
-    return story, image_url
-
-def generateNextPage(userOutput, chain):
-    output = continueStory(chain, userOutput)
-    dallePrompt = "2D cartoon child-friendly image with no text of this story: " + generateImage(output)
-    image_url = generateImageWithDALLE(dallePrompt)
-    output = output.split("DALL-E Prompt:")[0]
-    return output, image_url
 
 def cleanResponse(text):
     # Convert text to lower case for consistent searching
@@ -217,6 +230,7 @@ def cleanResponse(text):
     
     
 if __name__ == "__main__":
+    initialiseDatabase()
     app.run(debug=True)
 
 
