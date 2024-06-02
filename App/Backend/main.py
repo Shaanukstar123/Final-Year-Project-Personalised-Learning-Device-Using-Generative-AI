@@ -4,6 +4,8 @@ from flask_cors import CORS
 from webCrawler.newsGrabber import run_crawler
 from articleNamerGPT import generateNewNames
 from storyChain import initialiseStory, initialiseModel, continueStory
+from generateContent import initialiseContentModel, initialiseContent, continueContent
+from subjectChain import generateSubjectTopics
 from imageGenerator import generateImageWithDALLE
 from textSummariser import summariseText
 from database import initialiseDatabase
@@ -32,6 +34,7 @@ OpenAI.api_key = os.getenv("OPENAI_API_KEY")
 #storyChain = initialiseModel()
 '''ROUTES'''
 storyChain = initialiseModel()
+contentChain = initialiseContentModel()
 
 @app.route('/update_news', methods=['GET'])
 def start_crawler():
@@ -66,7 +69,16 @@ def fetch_story(id):
     store_story(id, response, imagePrompt, "", question)
     return jsonify({"story": response, "imagePrompt": imagePrompt, "question": question})
 
-        
+@app.route('/fetch_content', methods=['GET'])
+def fetch_content():
+    topic = request.args.get('topic', '')
+    global contentChain
+    contentChain = initialiseContentModel()
+    response = initialiseContent(contentChain, topic)
+    response, imagePrompt, question = cleanResponse(response)
+    store_story(topic, response, imagePrompt, "", question)
+    return jsonify({"story": response, "imagePrompt": imagePrompt, "question": question})
+
 @app.route('/continue_story', methods=['GET'])
 def continue_story():
     global storyChain
@@ -80,6 +92,43 @@ def continue_story():
         imagePrompt = summariseText(response)
     append_story(user_input, response, imagePrompt)
     return jsonify({"story": response, "imagePrompt": imagePrompt})
+
+@app.route('/continue_content', methods=['GET'])
+def continue_content():
+    global contentChain
+    user_input = request.args.get('user_input', '')
+    response = continueContent(contentChain, user_input)
+    promptRegex = re.compile(r'dall-e prompt:\s*(.*)', re.IGNORECASE)
+    match = promptRegex.search(response)
+    if match:
+        imagePrompt = match.group(1)
+    else:
+        imagePrompt = summariseText(response)
+    append_story(user_input, response, imagePrompt)
+    return jsonify({"story": response, "imagePrompt": imagePrompt})
+
+@app.route('/get_subject_topics', methods=['GET'])
+def get_subject_topics():
+    subject = request.args.get('subject', '')
+    #subjects = ['history', 'geography', 'maths', 'science', 'english', 'music']
+    if not subject:
+        return jsonify({'error': 'Subject is required'}), 400
+    return generateSubjectTopics(subject)
+    try:
+        return get_subject_topics(subject)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+    
+    # Fetch topics related to the subject from your data source
+    # try:
+    #     with open('data/output.json', 'r') as file:
+    #         data = json.load(file)
+    #         subject_topics = [article for article in data if article['subject'].lower() == subject.lower()]
+    #         return jsonify(subject_topics)
+    # except Exception as e:
+    #     return jsonify({'error': str(e)}), 500
+
 
 #Speech to text api token fetcher
 @app.route('/get_token', methods=['GET'])

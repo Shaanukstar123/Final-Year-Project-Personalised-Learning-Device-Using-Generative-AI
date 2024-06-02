@@ -20,45 +20,18 @@ document.addEventListener('DOMContentLoaded', () => {
     storyContainer.style.fontFamily = 'Comic Sans MS';
     const params = new URLSearchParams(window.location.search);
     const topicId = params.get('topicId');
+    const topicName = params.get('topicName');
     const buttonEl = document.getElementById("speak");
     const messageEl = document.getElementById("textarea");
     let isRecording = false;
     buttonEl.addEventListener("click", () => run());
 
     if (topicId) {
-        const cachedStory = localStorage.getItem(`story_${topicId}`);
-        if (cachedStory) {
-            const storyData = JSON.parse(cachedStory);
-            const storyContent = storyData.story + storyData.question;
-            addPage(storyContent, storyData.imagePrompt, storyData.imagePrompt, storyData.audioUrl)
-                .then(() => {
-                    displayContentWithAnimation(storyContainer, storyContent);
-                    if (storyData.audioUrl) {
-                        playAudio(storyData.audioUrl);
-                    }
-                });
-        } else {
-            axios.get(`http://localhost:5000/fetch_story/${topicId}`)
-                .then(response => {
-                    const storyContent = response.data.story + response.data.question;
-                    const imagePrompt = response.data.imagePrompt;
-                    const storyData = {
-                        story: response.data.story,
-                        question: response.data.question,
-                        imagePrompt: imagePrompt,
-                        audioUrl: ''
-                    };
-                    localStorage.setItem(`story_${topicId}`, JSON.stringify(storyData));
-                    addPage(storyContent, imagePrompt, '', '')
-                        .then(() => {
-                            displayContentWithAnimation(storyContainer, storyContent);
-                            updateImage(imagePrompt);
-                        });
-                })
-                .catch(error => {
-                    console.error('Error fetching story:', error);
-                });
-        }
+        fetchStory(topicId);
+    } else if (topicName) {
+        fetchTopicContent(topicName);
+    } else {
+        console.error('No topicId or topicName provided.');
     }
 
     const homeButton = document.getElementById('homeButton');
@@ -75,13 +48,131 @@ document.addEventListener('DOMContentLoaded', () => {
     initialiseSwipeDetection(storyContainer);
 });
 
+function fetchStory(topicId){
+    const cachedStory = localStorage.getItem(`story_${topicId}`);
+    if (cachedStory) {
+        const storyData = JSON.parse(cachedStory);
+        const storyContent = storyData.story + storyData.question;
+        addPage(storyContent, storyData.imagePrompt, storyData.imagePrompt, storyData.audioUrl)
+            .then(() => {
+                displayContentWithAnimation(storyContainer, storyContent);
+                if (storyData.audioUrl) {
+                    playAudio(storyData.audioUrl);
+                }
+            });
+    } else {
+        axios.get(`http://localhost:5000/fetch_story/${topicId}`)
+            .then(response => {
+                const storyContent = response.data.story + response.data.question;
+                const imagePrompt = response.data.imagePrompt;
+                const storyData = {
+                    story: response.data.story,
+                    question: response.data.question,
+                    imagePrompt: imagePrompt,
+                    audioUrl: ''
+                };
+                localStorage.setItem(`story_${topicId}`, JSON.stringify(storyData));
+                addPage(storyContent, imagePrompt, '', '')
+                    .then(() => {
+                        displayContentWithAnimation(storyContainer, storyContent);
+                        updateImage(imagePrompt);
+                    });
+            })
+            .catch(error => {
+                console.error('Error fetching story:', error);
+            });
+    }
+}
+
+function fetchTopicContent(topicName) {
+    const cachedStory = localStorage.getItem(`story_${topicName}`);
+    if (cachedStory) {
+        const storyData = JSON.parse(cachedStory);
+        const storyContent = storyData.story + storyData.question;
+        addPage(storyContent, storyData.imagePrompt, storyData.imagePrompt, storyData.audioUrl)
+            .then(() => {
+                displayContentWithAnimation(storyContainer, storyContent);
+                if (storyData.audioUrl) {
+                    playAudio(storyData.audioUrl);
+                }
+            });
+    } else {
+        axios.get(`http://localhost:5000/fetch_content?topic=${encodeURIComponent(topicName)}`)
+            .then(response => {
+                const storyContent = response.data.story + response.data.question;
+                const imagePrompt = response.data.imagePrompt;
+                const storyData = {
+                    story: response.data.story,
+                    question: response.data.question,
+                    imagePrompt: imagePrompt,
+                    audioUrl: ''
+                };
+                localStorage.setItem(`story_${topicName}`, JSON.stringify(storyData));
+                addPage(storyContent, imagePrompt, '', '')
+                    .then(() => {
+                        displayContentWithAnimation(storyContainer, storyContent);
+                        updateImage(imagePrompt);
+                    });
+            })
+            .catch(error => {
+                console.error('Error fetching content:', error);
+            });
+    }
+}
+
 function fetchNextPage() {
     console.log('Fetching next page of the story');
 
     const userInput = userTranscription; // Use the transcribed text
     console.log('User input:', userInput);
 
-    axios.get(`http://localhost:5000/continue_story`, {
+    const topicId = new URLSearchParams(window.location.search).get('topicId');
+    const topicName = new URLSearchParams(window.location.search).get('topicName');
+    let storyType = '';
+    // const cachedStory = localStorage.getItem(`story_${topicId}`)
+    // const cachedStory = localStorage.getItem(`story_${topicName}`);
+
+    // if (cachedStory){
+    //     storyType = JSON.parse(cachedStory).type;
+    // }
+    // if (!cachedStory || storyType !== 'story' || storyType !== 'content') {
+    //     if (topicId){
+    //         storyType = 'story';
+    //     }
+    //     else if (topicName){
+    //         storyType = 'content';
+    //     }
+    // }
+        
+    if (topicId) {
+        storyType = 'story';
+        // const cachedStory = localStorage.getItem(`story_${topicId}`);
+        // if (cachedStory) {
+        //     storyType = JSON.parse(cachedStory).type;
+        // }
+    } else if (topicName) {
+        storyType = 'content';
+        // const cachedStory = localStorage.getItem(`story_${topicName}`);
+        // if (cachedStory) {
+        //     storyType = JSON.parse(cachedStory).type;
+        // }
+    }
+    console.log("storyType", storyType)
+    console.log("TopicId", topicId)
+    console.log("TopicName", topicName)
+
+    let endpoint;
+    console.log("storyType", storyType)
+    if (storyType === 'story') {
+        endpoint = 'continue_story';
+    } else if (storyType === 'content') {
+        endpoint = 'continue_content';
+    } else {
+        console.error('Unknown continuation type.');
+        return;
+    }
+
+    axios.get(`http://localhost:5000/${endpoint}`, {
         params: {
             user_input: userInput
         }
@@ -96,13 +187,18 @@ function fetchNextPage() {
             displayContentWithAnimation(storyContainer, storyContent);
             updateImage(imagePrompt);
 
-            const topicId = new URLSearchParams(window.location.search).get('topicId');
             if (topicId) {
                 const cachedStory = localStorage.getItem(`story_${topicId}`);
                 let storyData = cachedStory ? JSON.parse(cachedStory) : { story: '', question: '', imagePrompt: '', audioUrl: '' };
                 storyData.story += ' ' + storyContent;
                 storyData.imagePrompt = imagePrompt;
                 localStorage.setItem(`story_${topicId}`, JSON.stringify(storyData));
+            } else if (topicName) {
+                const cachedStory = localStorage.getItem(`story_${topicName}`);
+                let storyData = cachedStory ? JSON.parse(cachedStory) : { story: '', question: '', imagePrompt: '', audioUrl: '' };
+                storyData.story += ' ' + storyContent;
+                storyData.imagePrompt = imagePrompt;
+                localStorage.setItem(`story_${topicName}`, JSON.stringify(storyData));
             }
         } else {
             console.error('Story content is undefined');

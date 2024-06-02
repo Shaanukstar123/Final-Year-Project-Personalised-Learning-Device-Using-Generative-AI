@@ -17,6 +17,7 @@ function getTopicsFromAPI() {
                 })
                 .catch(error => console.error('Error fetching topics:', error));
         }
+        setupSubjectButtons();
         setupClusterButton();
 
     });
@@ -75,5 +76,18 @@ function setupClusterButton() {
         });
     }
 }
+
+function setupSubjectButtons() {
+    const subjects = ['history', 'geography', 'science', 'maths','english', 'music'];
+    subjects.forEach(subject => {
+        const subjectElement = document.querySelector(`.${subject}`);
+        if (subjectElement) {
+            subjectElement.addEventListener('click', () => {
+                window.location.href = `../topicsPage/topics.html?subject=${subject}`;
+            });
+        }
+    });
+}
+
 
 getTopicsFromAPI();
