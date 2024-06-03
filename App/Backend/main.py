@@ -63,10 +63,9 @@ def fetch_story(id):
     storyChain = initialiseModel()
     articleContent = getArticleContent(id)
     response = initialiseStory(articleContent, storyChain)
-    response, imagePrompt, question = cleanResponse(response)
-    if imagePrompt == "":
-        imagePrompt = summariseText(response)
-    store_story(id, response, imagePrompt, "", question)
+    print("Response: ", response)
+    response, imagePrompt, question, themes = cleanResponse(response)
+    store_story(id, response, imagePrompt, "", question, themes)
     return jsonify({"story": response, "imagePrompt": imagePrompt, "question": question})
 
 @app.route('/fetch_content', methods=['GET'])
@@ -75,8 +74,9 @@ def fetch_content():
     global contentChain
     contentChain = initialiseContentModel()
     response = initialiseContent(contentChain, topic)
-    response, imagePrompt, question = cleanResponse(response)
-    store_story(topic, response, imagePrompt, "", question)
+    print("Response: ", response)
+    response, imagePrompt, question, themes = cleanResponse(response)
+    store_story(topic, response, imagePrompt, "", question, themes)
     return jsonify({"story": response, "imagePrompt": imagePrompt, "question": question})
 
 @app.route('/continue_story', methods=['GET'])
@@ -84,13 +84,10 @@ def continue_story():
     global storyChain
     user_input = request.args.get('user_input', '')
     response = continueStory(storyChain, user_input)
-    promptRegex = re.compile(r'dall-e prompt:\s*(.*)', re.IGNORECASE)
-    match = promptRegex.search(response)
-    if match:
-        imagePrompt = match.group(1)
-    else:
-        imagePrompt = summariseText(response)
-    append_story(user_input, response, imagePrompt)
+    print("Response: ", response)
+    response, imagePrompt, question, themes = cleanResponse(response)
+    response = response + question
+    append_story(user_input, (response), imagePrompt, themes)
     return jsonify({"story": response, "imagePrompt": imagePrompt})
 
 @app.route('/continue_content', methods=['GET'])
@@ -98,13 +95,8 @@ def continue_content():
     global contentChain
     user_input = request.args.get('user_input', '')
     response = continueContent(contentChain, user_input)
-    promptRegex = re.compile(r'dall-e prompt:\s*(.*)', re.IGNORECASE)
-    match = promptRegex.search(response)
-    if match:
-        imagePrompt = match.group(1)
-    else:
-        imagePrompt = summariseText(response)
-    append_story(user_input, response, imagePrompt)
+    response, imagePrompt, question, themes = cleanResponse(response)
+    append_story(user_input, response, imagePrompt, themes)
     return jsonify({"story": response, "imagePrompt": imagePrompt})
 
 @app.route('/get_subject_topics', methods=['GET'])
@@ -153,8 +145,6 @@ def get_token():
         return jsonify(response.json())
     else:
         return jsonify({'error': 'Failed to generate token', 'details': response.text}), response.status_code
-
-
 
 @app.route('/text-to-speech', methods=['POST'])
 def text_to_speech():
@@ -207,31 +197,42 @@ def run_clustering():
     
 '''Helper Functions'''
 
-def store_story(topic_id, story, image_prompt, image_url, question):
+def store_story(topic_id, story, image_prompt, image_url, question, themes):
     conn = sqlite3.connect('data/stories.db')
     cursor = conn.cursor()
     cursor.execute('''
-        INSERT INTO stories (topic_id, story, image_prompt, image_url, question)
-        VALUES (?, ?, ?, ?, ?)
-    ''', (topic_id, story, image_prompt, image_url, question))
+        INSERT INTO stories (topic_id, story, image_prompt, image_url, question, themes)
+        VALUES (?, ?, ?, ?, ?, ?)
+    ''', (topic_id, story, image_prompt, image_url, question, themes))
     conn.commit()
     conn.close()
 
-def append_story(topic_id, story, image_prompt):
+def append_story(topic_id, story, image_prompt, new_themes):
+    if new_themes:
+        new_themes = ", " + new_themes
+    else:
+        new_themes = ""
     conn = sqlite3.connect('data/stories.db')
     cursor = conn.cursor()
+    
+    # Fetch the current story and themes
     cursor.execute('''
-        SELECT story FROM stories WHERE topic_id = ?
+        SELECT story, themes FROM stories WHERE topic_id = ?
     ''', (topic_id,))
     result = cursor.fetchone()
+    
     if result:
         current_story = result[0] + ' ' + story
+        current_themes = result[1] if result[1] else ''  # Handle case where themes might be NULL
+        updated_themes = current_themes + ' ' + new_themes if current_themes else new_themes
+        
         cursor.execute('''
             UPDATE stories
-            SET story = ?, image_prompt = ?
+            SET story = ?, image_prompt = ?, themes = ?
             WHERE topic_id = ?
-        ''', (current_story, image_prompt, topic_id))
+        ''', (current_story, image_prompt, updated_themes, topic_id))
         conn.commit()
+    
     conn.close()
 
 def clear_database():
@@ -262,30 +263,27 @@ def generateImage(text):
     return dallePrompt
 
 def cleanResponse(text):
-    # Convert text to lower case for consistent searching
-    text_lower = text.lower()
+    dallePrompt = ""
+    cleanedResponse = text
+    questionPrompt = ""
+    themes = ""
+    dalleMatch = re.search(r'DALL-E prompt:\s*(.*?)(\.|\n|$)', text, re.IGNORECASE)
+    if dalleMatch:
+        dallePrompt = dalleMatch.group(1).strip()
+        # Remove the DALL-E prompt sentence from the text
+        cleanedResponse = re.sub(re.escape(dalleMatch.group(0)), '', text, flags=re.IGNORECASE)
+    #remove "DALL-e prompt:" from the text ignoring case
+    themeMatch= re.search(r'Themes:\s*(.*?)(\.|\n|$)', text, re.IGNORECASE)
+    if themeMatch:
+        themes = themeMatch.group(1).strip()
+        # Remove the DALL-E prompt sentence from the text
+        cleanedResponse = re.sub(re.escape(themeMatch.group(0)), '', cleanedResponse, flags=re.IGNORECASE)
+    cleanedResponse = re.sub(r'DALL-E Prompt:\s*', '', text, re.IGNORECASE)
+    questionMatch = re.search(r'question:\s*(.*)', text, re.IGNORECASE)
+    if questionMatch:
+        questionPrompt = questionMatch.group(1)
 
-    # Find start and end indices for each section
-    dalle_prompt_start = text_lower.find('dall-e prompt:')
-    story_start = text_lower.find('story:')
-    question_start = text_lower.find('question:')
-
-    if dalle_prompt_start == -1 or story_start == -1 or question_start == -1:
-        return "", "", text.strip()
-
-    # Extract DALL-E Prompt
-    dalle_prompt = text[dalle_prompt_start + len('dall-e prompt:'):story_start].strip()
-
-    # Extract Question
-    question = text[question_start + len('question:'):].strip()
-
-    # Extract STORY content
-    story_content = text[story_start + len('story:'):question_start].strip()
-
-    # Remove other words with colons from STORY content
-    cleaned_response = re.sub(r'\b\w+:\s*', '', story_content)
-
-    return cleaned_response.strip(), dalle_prompt, question 
+    return cleanedResponse, dallePrompt, questionPrompt, themes
     
     
 if __name__ == "__main__":

@@ -192,10 +192,11 @@ def vectorClustering3d(words):
 def run_clustering_on_db():
     conn = create_connection('data/stories.db')
     cur = conn.cursor()
-    cur.execute("SELECT story FROM stories")
+    cur.execute("SELECT themes FROM stories")
     rows = cur.fetchall()
     stories = [row[0] for row in rows]
     storyLdaArray = []
+    print("stories: ", stories)
     for story in stories:
         if story.strip():
             print(f"Processing story: {story[:60]}...")

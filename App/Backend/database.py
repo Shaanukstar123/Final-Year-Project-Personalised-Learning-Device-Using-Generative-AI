@@ -10,7 +10,8 @@ def initialiseDatabase():
             story TEXT,
             image_prompt TEXT,
             image_url TEXT,
-            question TEXT
+            question TEXT,
+            themes TEXT
         )
     ''')
     conn.commit()

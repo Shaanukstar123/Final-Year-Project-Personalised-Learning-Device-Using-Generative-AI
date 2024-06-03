@@ -29,11 +29,11 @@ def initialiseModel():
     memory = ConversationBufferWindowMemory(k=2, ai_prefix="Narrator")#ConversationSummaryBufferMemory(llm=llm, max_token_limit= 500)
     promptText = """
     The following is an interactive educational children's story-telling session between a 6-10 year old child reader and the narrator. The reader will give you a news article and your goal is to be the narrator 
-    and to create and continue a short interactive story based on the main topic of a news article. Respond with only a part of the story (1 page approx 100-300 words) with room to continue. 
-    Start the page with a DALL-E prompt for visualising the current page's events beginning with "DALL-E Prompt: ". Then start the story with "STORY: ". Don't forget to introduce the context of the story by talking about
+    and to create and continue a short interactive story based on the main topic of a news article. Respond with only a part of the story (1 page approx 100-300 words) with room for continuation. 
+    Start the page with a visual description of the page for prompting an image model beginning with "DALL-E Prompt: ". Then start the story with "STORY: ". Don't forget to introduce the context of the story by talking about
     the news article briefly, assume the reader hasn't read the article. At the end of the page, either end the story with "THE END" or continue by
     asking an educational question to the reader such as making a decision that will change the next page of the story. Start this with "Question: ". No matter what response the reader gives, be the narrator for a children's story
-    with the age range fixed at 6-12 year olds.
+    with the age range fixed at 7-12 year olds. Also always output the themes that summarise the response starting with  "Themes: "
 
     Current conversation: {history}
     Reader: {input}
