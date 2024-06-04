@@ -16,10 +16,11 @@ warnings.filterwarnings("ignore", category=UserWarning, module='joblib')
 
 # Load environment variables
 load_dotenv()
-
 # Function to generate embeddings for each word
 def textToWordVectors(words):
     model = SentenceTransformer('all-MiniLM-L6-v2')
+    #model = SentenceTransformer("Salesforce/SFR-Embedding-Mistral")
+    #word_embeddings = [(word, vo.embed(word, model="voyage-large-2-instruct")) for word in words[:10]]
     word_embeddings = [(word, model.encode(word)) for word in words]
     return word_embeddings
 
@@ -86,6 +87,7 @@ def visualise_word_clusters_3d(words, vectors, cluster_labels):
         cluster_words = [words[i] for i in indices]
         
         if cluster == -1:
+            continue  # Skip noise points
             color = 'k'  # Noise points colored black
             label = 'Noise'
         else:
@@ -137,7 +139,7 @@ def test():
     with open('stories.txt', 'r') as file:
         stories = file.read().split("Story:")
         storyLdaArray = []
-        for story in stories:
+        for story in stories[0]:
             if story.strip():  # Ensure non-empty stories
                 print(f"Processing story: {story[:60]}...")  # Print the start of the story for context
                 ldaTopics = getLdaTopics(story)
@@ -146,3 +148,6 @@ def test():
 
     # Cluster and visualize the words
     vectorClustering3d(storyLdaArray)
+
+if __name__ == '__main__':
+    test()
