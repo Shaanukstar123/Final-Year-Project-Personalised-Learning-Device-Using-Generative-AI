@@ -1,0 +1,2 @@
+Install this for name filtering:
+python -m spacy download en_core_web_sm

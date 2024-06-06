@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from sentence_transformers import SentenceTransformer
 from keyWordExtractor import getLdaTopics
+from alternative import extract_keywords_tfidf
 from sklearn.cluster import DBSCAN
 from sklearn.manifold import TSNE
 from dotenv import load_dotenv
@@ -152,9 +153,13 @@ with open('stories.txt', 'r') as file:
     for story in stories:
         if story.strip():  # Ensure non-empty stories
             print(f"Processing story: {story[:60]}...")  # Print the start of the story for context
-            ldaTopics = getLdaTopics(story)
+            ldaTopics = extract_keywords_tfidf([story])  # Pass the story as a list
+            ldaTopics_flat = [keyword for sublist in ldaTopics for keyword in sublist]  # Flatten the list of lists
+            storyLdaArray.extend(ldaTopics_flat)  # Add the extracted keywords to the array
+            print(f"Extracted Keywords: {ldaTopics_flat}")
+            # ldaTopics = getLdaTopics(story)
             storyLdaArray.extend(ldaTopics)  # Flatten the list of LDA topics
             print(f"Extracted LDA Topics: {ldaTopics}")
 
 # Cluster and visualize the words
-vectorClustering3d(storyLdaArray)
+#vectorClustering3d(storyLdaArray)

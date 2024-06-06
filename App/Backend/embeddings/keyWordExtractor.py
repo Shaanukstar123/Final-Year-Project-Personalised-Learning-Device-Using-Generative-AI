@@ -175,11 +175,18 @@ import numpy as np
 import re
 from nltk.corpus import stopwords
 from nltk.tokenize import sent_tokenize
+import spacy
 
 # Ensure NLTK resources are available
 import nltk
 nltk.download('punkt')
 nltk.download('stopwords')
+
+nlp = spacy.load('en_core_web_sm')
+
+COMMON_NAMES = set([
+    'lily', 'alex', 'max', 'mia', 'luca', 'william', 'henry', 'francis', 'drake', 'walter', 'raleigh'
+])
 
 def preprocess_text(text):
     text = text.lower()  # Convert to lowercase
@@ -188,6 +195,13 @@ def preprocess_text(text):
     stop_words = set(stopwords.words('english'))
     text = " ".join([word for word in text.split() if word not in stop_words])  # Remove stopwords
     return text
+
+def remove_names(text):
+    doc = nlp(text)
+    filtered_tokens = [
+        token.text for token in doc if token.ent_type_ != 'PERSON' and token.text.lower() not in COMMON_NAMES
+    ]
+    return ' '.join(filtered_tokens)
 
 # Split text into smaller parts
 def split_text(text, chunk_size=5):
@@ -198,7 +212,7 @@ def split_text(text, chunk_size=5):
     return chunks
 
 # LDA implementation
-def get_topics(texts, num_topics=2, top_n_words=5, max_df=0.85, min_df=1):
+def get_topics(texts, num_topics=2, top_n_words=5, max_df=1.0, min_df=0.75):
     vectorizer = CountVectorizer(max_df=max_df, min_df=min_df, stop_words='english')
     dtm = vectorizer.fit_transform(texts)
     
@@ -225,6 +239,7 @@ def get_document_topics(lda_model, dtm):
 # Run LDA on the chunks
 def getLdaTopics(text):
     book = preprocess_text(text)
+    book = remove_names(book)
     chunks = split_text(book)
     if not chunks:  # Check if chunks are empty
         return []

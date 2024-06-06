@@ -33,7 +33,7 @@ def generateTitleWithLangChain(articles):
         for a 7-12 year old age group. Ignore quizzes and videos. Replace the chosen article names with a 1-2 word representative topic name and replace the other names with '_'. 
         The topic name must be original (no duplicates) but also simple.
         encapsulating the article's main subject (e.g. Space mission, New Bacteria, Killer Whale). Always return in the same JSON format as input (id: new name). Keep the formatting the same or else the system will not be able to read it.
-        Here is the list: {articles}
+        Article list: {articles}
     '''
 
     prompt = ChatPromptTemplate.from_template(prompt_template)

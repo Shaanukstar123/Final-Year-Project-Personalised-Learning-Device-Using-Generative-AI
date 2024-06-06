@@ -3,11 +3,12 @@ import pickle
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-from sentence_transformers import SentenceTransformer
 from keyWordExtractor import getLdaTopics
 from sklearn.cluster import DBSCAN
 from sklearn.manifold import TSNE
 from sklearn.metrics.pairwise import cosine_distances
+from sentence_transformers import SentenceTransformer
+from sklearn.metrics import silhouette_score
 from dotenv import load_dotenv
 import warnings
 
@@ -129,25 +130,90 @@ def vectorClustering3d(words):
         distance_matrix = cosine_distances(unique_vectors)
         
         # DBSCAN Clustering with cosine distance
-        dbscan = DBSCAN(metric='precomputed', eps=0.3, min_samples=2)
+        dbscan = DBSCAN(metric='precomputed', eps=0.26, min_samples=2)
         cluster_assignment = dbscan.fit_predict(distance_matrix)
 
         visualise_word_clusters_3d(unique_words, unique_vectors, cluster_assignment)
 
+
+def compute_silhouette_scores(vectors, eps_values, min_samples_values):
+    scores = []
+    for eps in eps_values:
+        for min_samples in min_samples_values:
+            dbscan = DBSCAN(metric='precomputed', eps=eps, min_samples=min_samples)
+            cluster_assignment = dbscan.fit_predict(vectors)
+            print(f"eps: {eps}, min_samples: {min_samples}, cluster_assignment: {np.unique(cluster_assignment)}")  # Debugging line
+            if len(set(cluster_assignment)) > 1:  # Silhouette score is undefined for a single cluster
+                score = silhouette_score(vectors, cluster_assignment, metric='precomputed')
+                scores.append((eps, min_samples, score))
+            else:
+                scores.append((eps, min_samples, -1))  # -1 indicates invalid score due to single cluster
+    return scores
+
+def plot_silhouette_scores(scores):
+    eps_values, min_samples_values, silhouette_scores = zip(*scores)
+    silhouette_scores = np.array(silhouette_scores).reshape(len(set(eps_values)), len(set(min_samples_values)))
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    cax = ax.matshow(silhouette_scores, interpolation='nearest', cmap='viridis')
+    fig.colorbar(cax)
+
+    ax.set_xticks(np.arange(len(set(min_samples_values))))
+    ax.set_yticks(np.arange(len(set(eps_values))))
+
+    ax.set_xticklabels(np.round(list(set(min_samples_values)), 2))
+    ax.set_yticklabels(np.round(list(set(eps_values)), 2))
+
+    plt.title('Silhouette Scores for Different eps and min_samples Values')
+    plt.xlabel('min_samples')
+    plt.ylabel('eps')
+    plt.show()
+
 # Import stories from text file split by "Story: "
 def test():
-    with open('stories.txt', 'r') as file:
+    with open('stories.txt', 'r', encoding='utf-8') as file:
         stories = file.read().split("Story:")
         storyLdaArray = []
-        for story in stories[0]:
+        for story in stories:
             if story.strip():  # Ensure non-empty stories
                 print(f"Processing story: {story[:60]}...")  # Print the start of the story for context
                 ldaTopics = getLdaTopics(story)
-                storyLdaArray.extend(ldaTopics)  # Flatten the list of LDA topics
+                #themes = ["history", "word war ii", "pirates", "european history", "ships", "ocean", "adventure", "allied forces", "world war i", "electronics", "engineering", "spacex", "energy", "computers", "turing", "artificial intelligence", "robots"]
+                themes = ["history", "world war ii", "pirates", "european history", "ships", "ocean", "adventure", "allied forces", "world war i", 
+                                    "electronics", "engineering", "spacex", "energy", "computers", "turing", "artificial intelligence", "robots",
+                                    "electricity", "circuits", "robots", "coding", "space travel", "solar system", "planets", "stars", "galaxies", 
+                                    "space exploration", "rockets", "astronauts", "earth science", "nature", "animals", "plants", "ecosystems", 
+                                    "environment", "climate", "weather", "dinosaurs", "prehistoric life", "fossils", "inventions", "technology", 
+                                    "simple machines", "magnetism", "light", "sound", "forces", "motion", "gravity", "atoms", "molecules", "matter",
+                                    "medieval history", "renaissance", "explorers", "ancient Egypt", "ancient Greece", "ancient Rome", "Vikings", 
+                                    "knights", "castles", "myths", "legends", "fairy tales", "folklore", "famous inventors", "famous scientists", 
+                                    "famous explorers", "famous pirates", "treasure hunting", "naval battles", "sea monsters", "marine life", 
+                                    "oceans", "rivers", "lakes", "mountains", "volcanoes", "earthquakes", "deserts", "rainforests", "savannas", 
+                                    "polar regions", "continents", "countries", "cultures", "languages", "arts", "music", "dance", "painting", 
+                                    "sculpture", "literature", "poetry", "stories", "heroes", "heroines", "wildlife", "conservation", "recycling", 
+                                    "sustainability", "renewable energy", "solar power", "wind power", "hydropower"]
+
+                print("number of lda topics: ", len(ldaTopics))
+                #storyLdaArray.extend(ldaTopics)  # Flatten the list of LDA topics
+                #insert themes into storyLdaArray
+                storyLdaArray.extend(themes)
                 print(f"Extracted LDA Topics: {ldaTopics}")
 
     # Cluster and visualize the words
     vectorClustering3d(storyLdaArray)
+
+    # Evaluate silhouette scores for different eps values
+    conn = create_connection("vectors.db")
+    words, vectors = retrieve_all_word_vectors(conn)
+    unique_vectors, unique_indices = np.unique(vectors, axis=0, return_index=True)
+
+    # Compute cosine distance matrix
+    distance_matrix = cosine_distances(unique_vectors)
+
+    eps_values = np.arange(0.1, 0.8, 0.05)
+    min_samples_values = np.arange(2, 10, 1)
+    scores = compute_silhouette_scores(distance_matrix, eps_values, min_samples_values)
+    plot_silhouette_scores(scores)
 
 if __name__ == '__main__':
     test()
