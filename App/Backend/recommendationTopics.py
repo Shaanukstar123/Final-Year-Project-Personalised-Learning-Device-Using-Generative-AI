@@ -21,8 +21,9 @@ def generateRecommendationTopics(recommendations):
     llm, output_parser = initialiseAzureModel()
 
     prompt_template = '''
-        Given a list of recommended topics, you must return a list of 30-50 interesting topic titles that are related to the recommendations.
-        For context, the titles will be used to make stories, riddles, and quizzes for 7-12 year olds. Each title must be 1-5 words and should be unique and educational.
+        Given a list of recommended topics, you must return a list of 30-50 specific titles for stories, quizzes, and other types of educational media that are related to the recommendations.
+        E.g. "The Moon Landing", "King Tut's Tomb".
+        The titles will be used to make stories, riddles, and quizzes for 7-12 year olds. Each title must be 1-5 words and should be unique, educational, specific and not a generic subject.
         The return format must always be a JSON in the form "topics": ["title1", "title2", "title3"].
         Recommendations: {recommendations}
     '''
