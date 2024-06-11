@@ -848,3 +848,42 @@ span {
 .button-icon.active {
   background-color: #ff6347; /* Highlight color when active */
 }
+
+/*Recommendation system*/
+.recommendations-button {
+  background: linear-gradient(45deg, #FF6B6B, #FFD93D);
+  color: white;
+  font-weight: bold;
+  text-align: center;
+  padding: 10px 20px;
+  border-radius: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+.recommendations-button:hover, .recommendation-topic-card:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.recommendation-topic-card {
+  color: rgb(238, 225, 225);
+  font-weight: bold;
+  text-align: center;
+  padding: 10px 20px;
+  border-radius: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s, box-shadow 0.3s;
+  margin: 10px;
+  cursor: pointer;
+  animation: float 3s infinite ease-in-out;
+  background: linear-gradient(45deg, var(--start-color), var(--end-color));
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}

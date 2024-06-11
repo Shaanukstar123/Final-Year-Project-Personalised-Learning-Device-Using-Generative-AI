@@ -19,7 +19,7 @@ function getTopicsFromAPI() {
         }
         setupSubjectButtons();
         setupClusterButton();
-
+        setupRecommendationsButton();
     });
 }
 
@@ -43,18 +43,13 @@ function startRandomAnimations() {
     const buttons = document.querySelectorAll('.trending-topic-button');
     setInterval(() => {
         buttons.forEach(button => button.classList.remove('expandContract'));
-        const numButtons = Math.floor(Math.random() * buttons.length/4) + 1; // Number of buttons to animate
+        const numButtons = Math.floor(Math.random() * buttons.length / 4) + 1; // Number of buttons to animate
         for (let i = 0; i < numButtons; i++) {
             const randomButton = buttons[Math.floor(Math.random() * buttons.length)];
             randomButton.classList.add('expandContract');
         }
     }, 1500); // Interval time in milliseconds
 }
-
-// function handleButtonClick(event) {
-//     //print topic.content to console
-//     console.log(event.target.dataset.content);
-// }
 
 function handleButtonClick(event) {
     const topicId = event.target.dataset.id;
@@ -78,7 +73,7 @@ function setupClusterButton() {
 }
 
 function setupSubjectButtons() {
-    const subjects = ['history', 'geography', 'science', 'maths','english', 'music'];
+    const subjects = ['history', 'geography', 'science', 'maths', 'english', 'music'];
     subjects.forEach(subject => {
         const subjectElement = document.querySelector(`.${subject}`);
         if (subjectElement) {
@@ -89,5 +84,13 @@ function setupSubjectButtons() {
     });
 }
 
+function setupRecommendationsButton() {
+    const recommendationsButton = document.getElementById('recommendations-button');
+    if (recommendationsButton) {
+        recommendationsButton.addEventListener('click', () => {
+            window.location.href = '../recommendationspage/recommendations.html'; // Redirect to recommendations page
+        });
+    }
+}
 
 getTopicsFromAPI();

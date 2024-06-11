@@ -17,6 +17,7 @@ from imageGenerator import generateImageWithDALLE
 from textSummariser import summariseText
 from database import initialiseDatabase
 from clustering import run_clustering_on_db
+from topicColours import get_colour_for_topic
 
 from recommendationTopics import generateRecommendationTopics
 #from tests.apiTests import test_recommendation_topics
@@ -120,13 +121,19 @@ def get_subject_topics():
 
 @app.route('/recommendation_topics', methods=['GET'])
 def recommendation_topics():
-    try:
-        recommendations = get_recommendations_from_db()
-        new_topics = generateRecommendationTopics(recommendations)
-        return jsonify(new_topics), 200
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+    recommendations = get_recommendations_from_db()  # Your existing function to get recommendations
+    topics_with_colors = []
 
+    for topic in recommendations:
+        color = get_colour_for_topic(topic)
+        topics_with_colors.append({"topic": topic, "color": color})
+    print("Topics with colors: ", topics_with_colors)
+
+    return jsonify({"topics": topics_with_colors})
+    # try:
+        
+    # except Exception as e:
+    #     return jsonify({'error': str(e)}), 500
 
 
 #Speech to text api token fetcher
@@ -322,7 +329,7 @@ def test_recommendation_topics():
         response = client.get('/recommendation_topics')
         print('Status Code:', response.status_code)
 
-test_recommendation_topics()
+# test_recommendation_topics()
 if __name__ == "__main__":
     initialiseDatabase()
     app.run(debug=True)
