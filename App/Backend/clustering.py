@@ -1,5 +1,5 @@
 # clustering.py
-
+import json
 import sqlite3
 import pickle
 import numpy as np
@@ -128,7 +128,7 @@ def vectorClustering2d(words):
 
 def visualise_word_clusters_3d(words, vectors, cluster_labels):
     if len(vectors) == 0:
-        print("No vectors to visualize.")
+        print("No vectors to visualise.")
         return
     
     vectors = np.array(vectors)
@@ -182,12 +182,20 @@ def vectorClustering3d(words):
 
     if len(unique_vectors) == 0 or len(unique_words) == 0:
         print("No data found in the database.")
+        return []
     else:
         distance_matrix = cosine_distances(unique_vectors)
         dbscan = DBSCAN(metric='precomputed', eps=0.55, min_samples=2)
         cluster_assignment = dbscan.fit_predict(distance_matrix)
 
-        visualise_word_clusters_3d(unique_words, unique_vectors, cluster_assignment)
+        clusters = []
+        for cluster_id in set(cluster_assignment):
+            if cluster_id != -1:
+                cluster_points = [unique_words[i] for i in range(len(unique_words)) if cluster_assignment[i] == cluster_id]
+                clusters.append({'cluster_id': cluster_id, 'points': cluster_points})
+
+        #visualise_word_clusters_3d(unique_words, unique_vectors, cluster_assignment)
+        return clusters
 
 def run_clustering_on_db():
     conn = create_connection('data/stories.db')
@@ -203,5 +211,26 @@ def run_clustering_on_db():
             ldaTopics = getLdaTopics(story)
             storyLdaArray.extend(ldaTopics)
             print(f"Extracted LDA Topics: {ldaTopics}")
-    vectorClustering2d(storyLdaArray)
-    #vectorClustering3d(storyLdaArray)
+
+    clusters = vectorClustering3d(storyLdaArray)
+    
+    recommendations = []
+    density_threshold = 5  # Define your density threshold
+    for cluster in clusters:
+        if len(cluster['points']) >= density_threshold:
+            recommendations.extend(cluster['points'])
+    
+    recommendations = sorted(recommendations, key=lambda x: len(x), reverse=True)
+    
+    with open('data/recommendations.json', 'w') as f:
+        json.dump(recommendations, f, indent=4)
+    
+    # Store recommendations in the recommendations table
+    cur.execute('DELETE FROM recommendations')
+    cur.execute('INSERT INTO recommendations (recommendations) VALUES (?)', (json.dumps(recommendations),))
+    
+    conn.commit()
+    conn.close()
+
+
+

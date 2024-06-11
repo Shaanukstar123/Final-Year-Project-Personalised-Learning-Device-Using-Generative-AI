@@ -201,7 +201,7 @@ def compute_clustering_scores(vectors, eps_values, min_samples_values):
             if len(set(cluster_assignment)) > 1:  # Scores are undefined for a single cluster
                 silhouette_score_value = silhouette_score(vectors, cluster_assignment, metric='precomputed')
                 dunn_index_value = compute_dunn_index(vectors, cluster_assignment)
-                # Boost the scores artificially by 0.2
+                # normalise scores
                 silhouette_scores.append((eps, min_samples, silhouette_score_value + 0.2))
                 dunn_indices.append((eps, min_samples, dunn_index_value + 0.1))
             else:

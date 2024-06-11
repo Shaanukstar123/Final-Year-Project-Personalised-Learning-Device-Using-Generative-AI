@@ -1,6 +1,13 @@
+import re
+import os
+import json
+import requests
+import sqlite3
+
 from flask import Flask, jsonify, request, Response
 from flask_cors import CORS
-# from threading import Thread
+from threading import Thread
+
 from webCrawler.newsGrabber import run_crawler
 from articleNamerGPT import generateNewNames
 from storyChain import initialiseStory, initialiseModel, continueStory
@@ -10,18 +17,14 @@ from imageGenerator import generateImageWithDALLE
 from textSummariser import summariseText
 from database import initialiseDatabase
 from clustering import run_clustering_on_db
+
+from recommendationTopics import generateRecommendationTopics
+#from tests.apiTests import test_recommendation_topics
+
 import assemblyai as aai
 from openai import OpenAI
 from io import BytesIO
 
-from google.oauth2 import service_account
-from google.cloud import texttospeech
-
-import re
-import os
-import json
-import requests
-import sqlite3
 from dotenv import load_dotenv
 
 
@@ -35,6 +38,7 @@ OpenAI.api_key = os.getenv("OPENAI_API_KEY")
 '''ROUTES'''
 storyChain = initialiseModel()
 contentChain = initialiseContentModel()
+
 
 @app.route('/update_news', methods=['GET'])
 def start_crawler():
@@ -66,6 +70,7 @@ def fetch_story(id):
     print("Response: ", response)
     response, imagePrompt, question, themes = cleanResponse(response)
     store_story(id, response, imagePrompt, "", question, themes)
+    check_and_run_clustering()
     return jsonify({"story": response, "imagePrompt": imagePrompt, "question": question})
 
 @app.route('/fetch_content', methods=['GET'])
@@ -77,7 +82,9 @@ def fetch_content():
     print("Response: ", response)
     response, imagePrompt, question, themes = cleanResponse(response)
     store_story(topic, response, imagePrompt, "", question, themes)
+    check_and_run_clustering()
     return jsonify({"story": response, "imagePrompt": imagePrompt, "question": question})
+
 
 @app.route('/continue_story', methods=['GET'])
 def continue_story():
@@ -111,15 +118,15 @@ def get_subject_topics():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-    
-    # Fetch topics related to the subject from your data source
-    # try:
-    #     with open('data/output.json', 'r') as file:
-    #         data = json.load(file)
-    #         subject_topics = [article for article in data if article['subject'].lower() == subject.lower()]
-    #         return jsonify(subject_topics)
-    # except Exception as e:
-    #     return jsonify({'error': str(e)}), 500
+@app.route('/recommendation_topics', methods=['GET'])
+def recommendation_topics():
+    try:
+        recommendations = get_recommendations_from_db()
+        new_topics = generateRecommendationTopics(recommendations)
+        return jsonify(new_topics), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 
 
 #Speech to text api token fetcher
@@ -242,6 +249,17 @@ def clear_database():
     conn.commit()
     conn.close()
 
+def get_recommendations_from_db():
+    conn = sqlite3.connect('data/stories.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT recommendations FROM recommendations')
+    result = cursor.fetchone()
+    conn.close()
+    if result:
+        recommendations = json.loads(result[0])
+        return recommendations
+    return []
+
 
 def getArticleContent(id):
     with open('data/output.json', 'r') as file:
@@ -272,22 +290,42 @@ def cleanResponse(text):
         dallePrompt = dalleMatch.group(1).strip()
         # Remove the DALL-E prompt sentence from the text
         cleanedResponse = re.sub(re.escape(dalleMatch.group(0)), '', text, flags=re.IGNORECASE)
-    #remove "DALL-e prompt:" from the text ignoring case
     themeMatch= re.search(r'Themes:\s*(.*?)(\.|\n|$)', text, re.IGNORECASE)
     if themeMatch:
         themes = themeMatch.group(1).strip()
         # Remove the DALL-E prompt sentence from the text
         cleanedResponse = re.sub(re.escape(themeMatch.group(0)), '', cleanedResponse, flags=re.IGNORECASE)
-    cleanedResponse = re.sub(r'DALL-E Prompt:\s*', '', text, re.IGNORECASE)
+    # cleanedResponse = re.sub(r'DALL-E Prompt:\s*', '', text, re.IGNORECASE)
     questionMatch = re.search(r'question:\s*(.*)', text, re.IGNORECASE)
     if questionMatch:
         questionPrompt = questionMatch.group(1)
 
     return cleanedResponse, dallePrompt, questionPrompt, themes
     
+def run_clustering_in_background():
+    conn = sqlite3.connect('data/stories.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT COUNT(*) FROM stories')
+    count = cursor.fetchone()[0]
+    if count % 1 == 0:
+        run_clustering_on_db()
+    conn.close()
+
+def check_and_run_clustering():
+    # Run the clustering function on a separate thread
+    clustering_thread = Thread(target=run_clustering_in_background)
+    clustering_thread.start()
     
+
+def test_recommendation_topics():
+    with app.test_client() as client:
+        response = client.get('/recommendation_topics')
+        print('Status Code:', response.status_code)
+
+test_recommendation_topics()
 if __name__ == "__main__":
     initialiseDatabase()
     app.run(debug=True)
+
 
 

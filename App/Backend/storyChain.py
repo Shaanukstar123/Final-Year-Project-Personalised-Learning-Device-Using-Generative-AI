@@ -33,7 +33,7 @@ def initialiseModel():
     Start the page with a visual description of the page for prompting an image model beginning with "DALL-E Prompt: ". Then start the story with "STORY: ". Don't forget to introduce the context of the story by talking about
     the news article briefly, assume the reader hasn't read the article. At the end of the page, either end the story with "THE END" or continue by
     asking an educational question to the reader such as making a decision that will change the next page of the story. Start this with "Question: ". No matter what response the reader gives, be the narrator for a children's story
-    with the age range fixed at 7-12 year olds. Also always output the themes that summarise the response starting with  "Themes: "
+    with the age range fixed at 7-12 year olds. Also always output the educational topics and genres that summarise the response starting with  "Themes: "
 
     Current conversation: {history}
     Reader: {input}

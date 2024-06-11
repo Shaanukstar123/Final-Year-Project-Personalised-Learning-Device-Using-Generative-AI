@@ -21,27 +21,6 @@ export class Microphone {
             this.source.connect(node);
             node.connect(this.audioContext.destination); // This connection is not always necessary
         });
-
-        // this.audioContext.audioWorklet.addModule('audio-processor.js').then(() => {
-        //     console.log("Audio processor loaded");
-        //     this.source = this.audioContext.createMediaStreamSource(stream);
-        //     this.workletNode = new AudioWorkletNode(this.audioContext, 'audio-processor');
-        //     console.log("Audio processor node created");
-        //     this.workletNode.port.onmessage = (event) => {
-        //         if (this.webSocket && this.webSocket.readyState === WebSocket.OPEN) {
-        //           const now = performance.now();
-        //           if (now - this.lastSendTime > 500) {  // Send data every 300 ms instead
-        //             this.webSocket.send(event.data);
-        //             this.lastSendTime = now;
-        //           }
-        //         }
-        //       };
-              
-
-        //     // Connect everything
-        //     this.source.connect(this.workletNode);
-        //     this.workletNode.connect(this.audioContext.destination);
-        // });
     }
 
     stop() {

@@ -16,6 +16,7 @@ class CrawlingAgent(CrawlSpider):
 
     rules = (
         Rule(LinkExtractor(allow=('/newsround/[6-9]{2}\d*$')), callback='parse_item', follow=True),
+        #example: https://www.bbc.co.uk/newsround/61179377
     )
 
     def parse_item(self, response):
