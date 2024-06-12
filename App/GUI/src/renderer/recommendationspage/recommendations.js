@@ -51,8 +51,8 @@ function displayRecommendations(topics) {
 function getGradientColors(baseColor) {
     // Function to generate gradient colors from the base color
     // Adjust the lightness to create a gradient effect
-    const startColor = shadeColor(baseColor, -0.2); // Slightly darker
-    const endColor = shadeColor(baseColor, 0.2); // Slightly lighter
+    const startColor = shadeColor(baseColor, -0.1); // Slightly darker
+    const endColor = shadeColor(baseColor, 0.1); // Slightly lighter
     return { start: startColor, end: endColor };
 }
 
