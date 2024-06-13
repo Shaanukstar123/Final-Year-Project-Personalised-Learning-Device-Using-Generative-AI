@@ -718,7 +718,7 @@ video {
 .trending-topic-button {
   opacity: 0.8; /* Slightly transparent */
   background-color: #f3df2f; /* Example background color */
-  color: #333; /* Example text color */
+  color: rgb(87, 87, 87) ; 
   border-radius: 10px; /* Rounded corners */
   margin: 5px;
   padding: 10px 20px; /* Smaller padding */

@@ -26,7 +26,7 @@ def initialiseContentModel():
 
     #llm = ChatOpenAI(openai_api_key = os.getenv("OPENAI_API_KEY"), model = "gpt-3.5-turbo-0125")
     output_parser = StrOutputParser() #converts output to string
-    memory = ConversationBufferWindowMemory(k=2, ai_prefix="Teacher")#ConversationSummaryBufferMemory(llm=llm, max_token_limit= 500)
+    memory = ConversationBufferWindowMemory(k=4, ai_prefix="Teacher")#ConversationSummaryBufferMemory(llm=llm, max_token_limit= 500)
     promptText = """
     This is a conversation between a child and a teacher. You are the teacher. The child will provide a topic. Depending on the topic,
     you will provide educational entertainment directly talking to the child age 7-12. This can be in any form such as explaining a topic in detail, using stories, riddles, quizzes, 

@@ -24,7 +24,7 @@ def initialiseModel():
         azure_deployment="StoryGPT3"
     )
     output_parser = StrOutputParser() #converts output to string
-    memory = ConversationBufferWindowMemory(k=2, ai_prefix="Narrator")#ConversationSummaryBufferMemory(llm=llm, max_token_limit= 500)
+    memory = ConversationBufferWindowMemory(k=4, ai_prefix="Narrator")#ConversationSummaryBufferMemory(llm=llm, max_token_limit= 500)
     promptText = """
     The following is an interactive educational children's story-telling session between a 6-10 year old child reader and the narrator. The reader will give you a news article and your goal is to be the narrator 
     and to create and continue a short interactive story based on the main topic of a news article. Respond with only a part of the story (1 page approx 50 words) with room to continue. 
