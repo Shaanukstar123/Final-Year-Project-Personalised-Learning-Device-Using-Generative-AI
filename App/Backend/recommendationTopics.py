@@ -7,25 +7,15 @@ from langchain.prompts import ChatPromptTemplate
 import os
 from dotenv import load_dotenv
 
-def initialiseAzureModel():
-    llm = AzureChatOpenAI(
-        api_version=os.getenv("OPENAI_API_VERSION"),
-        api_key=os.getenv("AZURE_API_KEY"),
-        azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
-        azure_deployment="StoryGPT3"
-    )
-    output_parser = JsonOutputParser()  # Converts output to JSON
-    return llm, output_parser
 
-def generateRecommendationTopics(recommendations):
-    llm, output_parser = initialiseAzureModel()
+def generateRecommendationTopics(llm, output_parser,recommendations):
 
     prompt_template = '''
-        Given a list of recommended topics, you must return a list of 30-50 specific titles for stories, quizzes, and other types of educational media that are related to the recommendations.
-        E.g. "The Moon Landing", "King Tut's Tomb".
-        The titles will be used to make stories, riddles, and quizzes for 7-12 year olds. Each title must be 1-5 words and should be unique, educational, specific and not a generic subject.
-        The return format must always be a JSON in the form "topics": ["title1", "title2", "title3"].
-        Recommendations: {recommendations}
+        Given a list of words, be creative and make up a list of 20-50 specific story titles or quiz titles that are related to these words.
+        Make them very specific and not generic E.g. "Space = The Moon Landing", "History = King Tut's Tomb"...
+        Target age group is 7-12 years old.
+        The return format must always be a JSON in the form "topics": ["title1", "title2", "title3"]. Make sure the title names are unique.
+        Words: {recommendations}
     '''
 
     recommendations_str = ", ".join(recommendations)

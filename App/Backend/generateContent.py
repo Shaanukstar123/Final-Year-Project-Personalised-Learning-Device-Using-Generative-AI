@@ -14,18 +14,8 @@ from dotenv import load_dotenv
 
 #instantiate model so it can be passed between functions
 
-def initialiseContentModel():
+def initialiseContentModel(llm, output_parser):
     load_dotenv()
-    
-    llm = AzureChatOpenAI(
-        api_version = os.getenv("OPENAI_API_VERSION"), 
-        api_key = os.getenv("AZURE_API_KEY"),
-        azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT"),
-        azure_deployment="StoryGPT3"
-    )
-
-    #llm = ChatOpenAI(openai_api_key = os.getenv("OPENAI_API_KEY"), model = "gpt-3.5-turbo-0125")
-    output_parser = StrOutputParser() #converts output to string
     memory = ConversationBufferWindowMemory(k=4, ai_prefix="Teacher")#ConversationSummaryBufferMemory(llm=llm, max_token_limit= 500)
     promptText = """
     This is a conversation between a child and a teacher. You are the teacher. The child will provide a topic. Depending on the topic,

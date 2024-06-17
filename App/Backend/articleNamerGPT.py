@@ -8,30 +8,17 @@ import time
 
 # Import the necessary LangChain components
 
-def initialiseAzureModel():
+def generateTitleWithLangChain(llm, output_parser,articles):
     load_dotenv()
-    llm = AzureChatOpenAI(
-        api_version=os.getenv("OPENAI_API_VERSION"),
-        api_key=os.getenv("AZURE_API_KEY"),
-        azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
-        azure_deployment="StoryGPT3"
-    )
-    output_parser = JsonOutputParser()  # Converts output to JSON
-    return llm, output_parser
-
-def generateTitleWithLangChain(articles):
-    load_dotenv()
-
-    llm, output_parser = initialiseAzureModel()
 
     # Convert article list to a string format acceptable by our prompt
     dictToString = json.dumps({article['id']: article['name'] for article in articles})
 
     # Define the prompt template for topic choosing
     prompt_template = '''
-        You are a topic chooser for a children's app. Given a list of article names and ids in JSON format, choose only interesting articles that best represent an open topic that is diverse and suitable
-        for a 7-12 year old age group. Ignore quizzes and videos. Replace the chosen article names with a 1-2 word representative topic name and replace the other names with '_'. 
-        The topic name must be original (no duplicates) but also simple.
+        You are a topic chooser for a children's app. Given a list of article names and ids in JSON format, choose interesting articles that best represent an open topic that is diverse and suitable
+        for a 7-12 year old age group. Do not add quizzes and videos. Replace the chosen article names with a 1-2 word representative topic name and replace the other names with '_'. 
+        The topic name must be original (no duplicates) but also simple. Do not repeat names, make them unique.
         encapsulating the article's main subject (e.g. Space mission, New Bacteria, Killer Whale). Always return in the same JSON format as input (id: new name). Keep the formatting the same or else the system will not be able to read it.
         Article list: {articles}
     '''
@@ -80,8 +67,8 @@ def addNewNames(nameDict, dir):
         json.dump(updated_articles, file, indent=2)
 
 
-def generateNewNames():
+def generateNewNames(llm, output_parser):
     dir = 'data/output.json'
     articles = getArticles(dir)
-    newNames = generateTitleWithLangChain(articles)
+    newNames = generateTitleWithLangChain(llm, output_parser,articles)
     addNewNames(newNames, dir)

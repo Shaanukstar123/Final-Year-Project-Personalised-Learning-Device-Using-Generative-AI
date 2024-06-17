@@ -14,18 +14,18 @@ from dotenv import load_dotenv
 
 #instantiate model so it can be passed between functions
 
-def initialiseModel():
+def initialiseModel(llm, output_parser):
     load_dotenv()
     
-    llm = AzureChatOpenAI(
-        api_version = os.getenv("OPENAI_API_VERSION"), 
-        api_key = os.getenv("AZURE_API_KEY"),
-        azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT"),
-        azure_deployment="StoryGPT3"
-    )
+    # llm = AzureChatOpenAI(
+    #     api_version = os.getenv("OPENAI_API_VERSION"), 
+    #     api_key = os.getenv("AZURE_API_KEY"),
+    #     azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT"),
+    #     azure_deployment="StoryGPT3"
+    # )
 
-    #llm = ChatOpenAI(openai_api_key = os.getenv("OPENAI_API_KEY"), model = "gpt-3.5-turbo-0125")
-    output_parser = StrOutputParser() #converts output to string
+    # #llm = ChatOpenAI(openai_api_key = os.getenv("OPENAI_API_KEY"), model = "gpt-3.5-turbo-0125")
+    # output_parser = StrOutputParser() #converts output to string
     memory = ConversationBufferWindowMemory(k=4, ai_prefix="Narrator")#ConversationSummaryBufferMemory(llm=llm, max_token_limit= 500)
     promptText = """
     The following is an interactive educational children's story-telling session between a 6-10 year old child reader and the narrator. The reader will give you a news article and your goal is to be the narrator 

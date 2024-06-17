@@ -11,6 +11,8 @@ from sklearn.cluster import DBSCAN
 from sklearn.manifold import TSNE
 from sklearn.metrics.pairwise import cosine_distances
 from dotenv import load_dotenv
+
+from recommendationTopics import generateRecommendationTopics
 import warnings
 
 # Suppress joblib warnings (optional)
@@ -197,7 +199,7 @@ def vectorClustering3d(words):
         #visualise_word_clusters_3d(unique_words, unique_vectors, cluster_assignment)
         return clusters
 
-def run_clustering_on_db():
+def run_clustering_on_db(llm, output_parser):
     conn = create_connection('data/stories.db')
     cur = conn.cursor()
     cur.execute("SELECT themes FROM stories")
@@ -219,15 +221,21 @@ def run_clustering_on_db():
     for cluster in clusters:
         if len(cluster['points']) >= density_threshold:
             recommendations.extend(cluster['points'])
+    print("Previous Recommendations: ", recommendations)
+    recommendations = generateRecommendationTopics(llm, output_parser, str(recommendations))
     
-    recommendations = sorted(recommendations, key=lambda x: len(x), reverse=True)
+    #convert recommendations json with strucutre {"topics": ["title1", "title2", "title3"]} to a list of titles
+    returnedRecommendations = recommendations['topics']
+    # sorted(recommendations, key=lambda x: len(x), reverse=True)
     
     with open('data/recommendations.json', 'w') as f:
-        json.dump(recommendations, f, indent=4)
+        json.dump(returnedRecommendations, f, indent=4)
+
+    print("Recommendations: ", returnedRecommendations)
     
     # Store recommendations in the recommendations table
     cur.execute('DELETE FROM recommendations')
-    cur.execute('INSERT INTO recommendations (recommendations) VALUES (?)', (json.dumps(recommendations),))
+    cur.execute('INSERT INTO recommendations (recommendations) VALUES (?)', (json.dumps(returnedRecommendations),))
     
     conn.commit()
     conn.close()

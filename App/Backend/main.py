@@ -9,6 +9,9 @@ from flask_cors import CORS
 from threading import Thread
 
 from webCrawler.newsGrabber import run_crawler
+from langchain_openai import AzureChatOpenAI
+from langchain_core.output_parsers import JsonOutputParser
+from langchain_core.output_parsers import StrOutputParser
 from articleNamerGPT import generateNewNames
 from storyChain import initialiseStory, initialiseModel, continueStory
 from generateContent import initialiseContentModel, initialiseContent, continueContent
@@ -35,10 +38,19 @@ load_dotenv()
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "keys/GoogleFypKey.json"
 OpenAI.api_key = os.getenv("OPENAI_API_KEY")
 
+llm = AzureChatOpenAI(
+    api_version=os.getenv("OPENAI_API_VERSION"),
+    api_key=os.getenv("AZURE_API_KEY"),
+    azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+    azure_deployment="StoryGPT3",
+    verbose=True
+)
+jsonOutputParser = JsonOutputParser()  # Converts output to JSON
+stringOutputParser = StrOutputParser()  # Converts output to string
 #storyChain = initialiseModel()
 '''ROUTES'''
-storyChain = initialiseModel()
-contentChain = initialiseContentModel()
+storyChain = initialiseModel(llm, stringOutputParser)
+contentChain = initialiseContentModel(llm, stringOutputParser)
 
 
 @app.route('/update_news', methods=['GET'])
@@ -48,7 +60,7 @@ def start_crawler():
 
 @app.route('/get_topics', methods=['GET'])
 def get_topics():
-    generateNewNames() #updates json with new topic names
+    generateNewNames(llm,jsonOutputParser) #updates json with new topic names
     with open('data/output.json', 'r') as file:
         data = json.load(file)
         return jsonify(data)
@@ -65,7 +77,6 @@ def get_image():
 def fetch_story(id):
     global storyChain
     imagePrompt = ""
-    storyChain = initialiseModel()
     articleContent = getArticleContent(id)
     response = initialiseStory(articleContent, storyChain)
     print("Response: ", response)
@@ -78,7 +89,6 @@ def fetch_story(id):
 def fetch_content():
     topic = request.args.get('topic', '')
     global contentChain
-    contentChain = initialiseContentModel()
     response = initialiseContent(contentChain, topic)
     print("Response: ", response)
     response, imagePrompt, question, themes = cleanResponse(response)
@@ -315,7 +325,7 @@ def run_clustering_in_background():
     cursor.execute('SELECT COUNT(*) FROM stories')
     count = cursor.fetchone()[0]
     if count % 1 == 0:
-        run_clustering_on_db()
+        run_clustering_on_db(llm, jsonOutputParser)
     conn.close()
 
 def check_and_run_clustering():
