@@ -23,6 +23,7 @@ function getTopicsFromAPI() {
 
         // Initialize the on-screen keyboard for the search input
         initializeVirtualKeyboard();
+        setupSearchBar(); // Add this line to set up the search bar
     });
 }
 
@@ -101,6 +102,29 @@ function setupRecommendationsButton() {
             window.location.href = '../recommendationspage/recommendations.html';
         });
     }
+}
+
+function setupSearchBar() {
+    const searchBar = document.getElementById('search-input');
+    if (searchBar) {
+        searchBar.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                const query = searchBar.value;
+                searchContent(query);
+            }
+        });
+    }
+}
+
+function searchContent(query) {
+    axios.get(`http://localhost:5000/custom_content`, { params: { query } })
+        .then(response => {
+            console.log("Search Results: ", response.data);
+            // You can handle the response data and display it accordingly
+            // For example, you could call createTopicButtons(response.data) to display the search results
+            createTopicButtons(response.data);
+        })
+        .catch(error => console.error('Error fetching search results:', error));
 }
 
 getTopicsFromAPI();
