@@ -2,8 +2,8 @@
 const assemblyai = require('assemblyai');
 const pages = [];
 let currentPageIndex = 0;
-let incompleteWord = '';
-let accumulatedStory = '';
+// let incompleteWord = ''; //For streaming
+// let accumulatedStory = '';
 let ws = null;  // WebSocket instance
 const buttonEl = document.getElementById("speak");
 const messageEl = document.getElementById("textarea");
@@ -14,6 +14,7 @@ let rt;
 let microphone = null;
 let userTranscription = '';
 let cumulativeDelay = 0;
+let storyContainer;
 
 document.addEventListener('DOMContentLoaded', () => {
     const storyContainer = document.getElementById('story-container');
@@ -21,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const params = new URLSearchParams(window.location.search);
     const topicId = params.get('topicId');
     const topicName = params.get('topicName');
+    const query = params.get('customTopic');
     const buttonEl = document.getElementById("speak");
     const messageEl = document.getElementById("textarea");
     let isRecording = false;
@@ -30,6 +32,8 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchStory(topicId);
     } else if (topicName) {
         fetchTopicContent(topicName);
+    }else if (query) {
+        fetchCustomContent(query);
     } else {
         console.error('No topicId or topicName provided.');
     }
@@ -120,6 +124,23 @@ function fetchTopicContent(topicName) {
     }
 }
 
+function fetchCustomContent(topicName) {
+    axios.get(`http://localhost:5000/custom_content`, { params: { query: topicName } })
+    .then(response => {
+        //ensure global story container is the one being used
+        const storyContent = response.data.story + response.data.question;
+        const imagePrompt = response.data.imagePrompt;
+        addPage(storyContent, imagePrompt, '', '')
+            .then(() => {
+                displayContentWithAnimation(storyContainer, storyContent);
+                updateImage(imagePrompt);
+            });
+    })
+    .catch(error => {
+        console.error('Error fetching story:', error);
+    });
+}
+
 function fetchNextPage() {
     console.log('Fetching next page of the story');
 
@@ -129,20 +150,6 @@ function fetchNextPage() {
     const topicId = new URLSearchParams(window.location.search).get('topicId');
     const topicName = new URLSearchParams(window.location.search).get('topicName');
     let storyType = '';
-    // const cachedStory = localStorage.getItem(`story_${topicId}`)
-    // const cachedStory = localStorage.getItem(`story_${topicName}`);
-
-    // if (cachedStory){
-    //     storyType = JSON.parse(cachedStory).type;
-    // }
-    // if (!cachedStory || storyType !== 'story' || storyType !== 'content') {
-    //     if (topicId){
-    //         storyType = 'story';
-    //     }
-    //     else if (topicName){
-    //         storyType = 'content';
-    //     }
-    // }
         
     if (topicId) {
         storyType = 'story';
@@ -150,7 +157,7 @@ function fetchNextPage() {
         // if (cachedStory) {
         //     storyType = JSON.parse(cachedStory).type;
         // }
-    } else if (topicName) {
+    } else{
         storyType = 'content';
         // const cachedStory = localStorage.getItem(`story_${topicName}`);
         // if (cachedStory) {
@@ -340,7 +347,9 @@ function addPage(content, dallePrompt = '', imageUrl = '', audioUrl = '') {
 
 function displayContentWithAnimation(container, content) {
     // Clear the container first
-    container.innerHTML = '';
+    if (container){
+        container.innerHTML = '';
+    }
 
     const words = content.split(/\s+/);
     cumulativeDelay = 0;  // Reset the delay for word animation

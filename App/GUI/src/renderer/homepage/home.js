@@ -1,4 +1,3 @@
-// home.js
 const axios = require('axios');
 const { runKioskBoard } = require('./keyboard.js');
 
@@ -106,25 +105,15 @@ function setupRecommendationsButton() {
 
 function setupSearchBar() {
     const searchBar = document.getElementById('search-input');
-    if (searchBar) {
-        searchBar.addEventListener('keypress', (event) => {
-            if (event.key === 'Enter') {
-                const query = searchBar.value;
-                searchContent(query);
+    const searchButton = document.getElementById('search-button');
+    if (searchBar && searchButton) {
+        searchButton.addEventListener('click', () => {
+            const query = searchBar.value;
+            if (query) {
+                window.location.href = `../storypage/story.html?customTopic=${encodeURIComponent(query)}`;
             }
         });
     }
-}
-
-function searchContent(query) {
-    axios.get(`http://localhost:5000/custom_content`, { params: { query } })
-        .then(response => {
-            console.log("Search Results: ", response.data);
-            // You can handle the response data and display it accordingly
-            // For example, you could call createTopicButtons(response.data) to display the search results
-            createTopicButtons(response.data);
-        })
-        .catch(error => console.error('Error fetching search results:', error));
 }
 
 getTopicsFromAPI();

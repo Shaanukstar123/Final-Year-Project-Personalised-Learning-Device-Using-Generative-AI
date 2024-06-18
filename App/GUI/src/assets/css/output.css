@@ -699,26 +699,31 @@ video {
   display: flex; /* Using flexbox */
   flex-wrap: wrap; /* Allow multiple rows */
   justify-content: center; /* Center items horizontally */
-  align-items: center; /* Center items vertically */
+  align-items: flex-start; /* Align items to the top */
   gap: 10px; /* Space between buttons */
   padding: 20px; /* Padding around the entire container */
-  position: absolute; /* Position it at the bottom */
-  bottom: 0;
+  max-height: 50vh; /* Maximum height of the container */
+  overflow-y: auto; /* Allow vertical scrolling */
+  position: relative; /* Remove absolute positioning to fit within the flow */
   width: 100%; /* Take the full width */
 }
-@keyframes expandContract {
-  0%, 100% {
-      transform: scale(1);
-  }
-  50% {
-      transform: scale(1.1);
-  }
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.trending-topics-container::-webkit-scrollbar {
+  display: none;
 }
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.trending-topics-container {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
 /* Style for each smaller topic button */
 .trending-topic-button {
   opacity: 0.8; /* Slightly transparent */
   background-color: #f3df2f; /* Example background color */
-  color: rgb(87, 87, 87) ; 
+  color: rgb(87, 87, 87); 
   border-radius: 10px; /* Rounded corners */
   margin: 5px;
   padding: 10px 20px; /* Smaller padding */
@@ -729,6 +734,7 @@ video {
   transition: all 0.3s ease; /* Smooth transition for hover */
   transform-origin: center center;
 }
+
 .trending-topic-button.expandContract {
   animation: expandContract 2s infinite;
 }
@@ -747,6 +753,17 @@ video {
   font-size: 40px; /* Larger font size */
   width: 100%; /* Ensure full width for center alignment */
 }
+
+@keyframes expandContract {
+  0%, 100% {
+      transform: scale(1);
+  }
+  50% {
+      transform: scale(1.1);
+  }
+}
+
+
 .story-page {
   /* background-image: url('../images/storypage/stainedPaper.jpg'); */
   background-color: #f7f3db;
@@ -893,4 +910,32 @@ span {
   50% {
     transform: translateY(-10px);
   }
+}
+
+.search-bar-container {
+  position: relative;
+}
+
+.search-bar-container input {
+  padding-right: 10px; /* Make space for the search icon */
+}
+
+.search-button {
+  position: absolute;
+  right: 200px;
+  top: 70%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.search-button svg {
+  width: 24px;
+  height: 24px;
+  color: gray;
+}
+
+.search-button svg:hover {
+  color: darkgray;
 }

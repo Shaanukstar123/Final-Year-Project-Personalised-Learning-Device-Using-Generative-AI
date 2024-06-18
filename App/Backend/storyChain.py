@@ -1,21 +1,10 @@
-from langchain_openai import ChatOpenAI
-from langchain_openai import AzureChatOpenAI
-from langchain_core.output_parsers import StrOutputParser
-from langchain.memory import ConversationKGMemory
 from langchain.chains import ConversationChain
 from langchain.prompts.prompt import PromptTemplate
-from langchain.chains.conversation.memory import ConversationSummaryBufferMemory
 from langchain.chains.conversation.memory import ConversationBufferWindowMemory
-import os
-import re 
-import time
-#import .env file
-from dotenv import load_dotenv
 
 #instantiate model so it can be passed between functions
 
 def initialiseModel(llm, output_parser):
-    load_dotenv()
     
     # llm = AzureChatOpenAI(
     #     api_version = os.getenv("OPENAI_API_VERSION"), 
@@ -60,7 +49,7 @@ def initialiseModel(llm, output_parser):
         
 def initialiseStory(article, storyChain):
     #clear the memory
-    #storyChain.memory.clear()
+    storyChain.memory.clear()
     # buffered_output = ""
     # for output in streamStoryOutput(storyChain.llm, article):
     #     buffered_output += output.content

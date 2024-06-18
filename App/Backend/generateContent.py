@@ -52,7 +52,7 @@ def initialiseContentModel(llm, output_parser):
         
 def initialiseContent(contentChain, topic):
     #clear the memory
-    #storyChain.memory.clear()
+    contentChain.memory.clear()
     # buffered_output = ""
     # for output in streamStoryOutput(storyChain.llm, article):
     #     buffered_output += output.content

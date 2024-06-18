@@ -15,6 +15,7 @@ from langchain_core.output_parsers import StrOutputParser
 from articleNamerGPT import generateNewNames
 from storyChain import initialiseStory, initialiseModel, continueStory
 from generateContent import initialiseContentModel, initialiseContent, continueContent
+from customContentChain import initCustomContentModel
 from subjectChain import generateSubjectTopics
 from imageGenerator import generateImageWithDALLE
 from textSummariser import summariseText
@@ -51,6 +52,7 @@ stringOutputParser = StrOutputParser()  # Converts output to string
 '''ROUTES'''
 storyChain = initialiseModel(llm, stringOutputParser)
 contentChain = initialiseContentModel(llm, stringOutputParser)
+customChain = initCustomContentModel(llm, stringOutputParser)
 
 
 @app.route('/update_news', methods=['GET'])
@@ -75,7 +77,7 @@ def get_image():
 
 @app.route('/fetch_story/<id>', methods=['GET'])
 def fetch_story(id):
-    global storyChain
+    global storyChain    
     imagePrompt = ""
     articleContent = getArticleContent(id)
     response = initialiseStory(articleContent, storyChain)
@@ -116,6 +118,18 @@ def continue_content():
     response, imagePrompt, question, themes = cleanResponse(response)
     append_story(user_input, response, imagePrompt, themes)
     return jsonify({"story": response, "imagePrompt": imagePrompt})
+
+@app.route('/custom_content', methods=['GET'])
+def fetch_custom_content():
+    customQuery = request.args.get('query', '')
+    global customChain
+    response = initialiseContent(customChain, customQuery)
+    print("Response: ", response)
+    response, imagePrompt, question, themes = cleanResponse(response)
+    store_story(customQuery, response, imagePrompt, "", question, themes)
+    check_and_run_clustering()
+    return jsonify({"story": response, "imagePrompt": imagePrompt, "question": question})
+    
 
 @app.route('/get_subject_topics', methods=['GET'])
 def get_subject_topics():
@@ -324,7 +338,7 @@ def run_clustering_in_background():
     cursor = conn.cursor()
     cursor.execute('SELECT COUNT(*) FROM stories')
     count = cursor.fetchone()[0]
-    if count % 1 == 0:
+    if count % 2 == 0:
         run_clustering_on_db(llm, jsonOutputParser)
     conn.close()
 
