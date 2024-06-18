@@ -9,7 +9,6 @@
 </head>
 <body class="bg-gradient-to-r from-blue-300 to-purple-300 min-h-screen">
     <div class="container mx-auto px-4 py-8">
-        <script src="home.js"></script>
         <div class="topics-container mb-8">
             <!-- First Row of Topics -->
             <div class="grid grid-cols-2 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
@@ -25,15 +24,6 @@
             </div>
         </div>
 
-        <!-- Search Bar -->
-        <div class="search-bar-container mb-8">
-            <div class="max-w-4xl mx-auto">
-                <input type="text" class="w-full px-4 py-2 rounded-xl shadow-xl focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="What are you interested in?">
-            </div>
-        </div>
-
-        <div id="trending-topics" class="trending-topics-container"></div>
-
         <!-- Recommendations Button -->
         <div class="recommendations-button-container mt-8">
             <div class="max-w-4xl mx-auto">
@@ -43,6 +33,14 @@
             </div>
         </div>
 
+        <!-- Search Bar -->
+        <div class="search-bar-container mb-8">
+            <div class="max-w-4xl mx-auto">
+                <input type="text" id="search-input" class="w-full px-4 py-2 rounded-xl shadow-xl focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="What are you interested in?">
+            </div>
+        </div>
+        <div id="trending-topics" class="trending-topics-container"></div>
+        
         <!-- Clustering Button -->
         <div class="clustering-button-container mt-8">
             <div class="max-w-4xl mx-auto">
@@ -52,5 +50,6 @@
             </div>
         </div>
     </div>
+    <script src="home.js"></script> <!-- Your custom JS file -->
 </body>
 </html>

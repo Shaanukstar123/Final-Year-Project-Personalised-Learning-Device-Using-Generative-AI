@@ -850,6 +850,13 @@ span {
 }
 
 /*Recommendation system*/
+
+.recommendations-button-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 10px;
+}
 .recommendations-button {
   background: linear-gradient(45deg, #FF6B6B, #FFD93D);
   color: white;
