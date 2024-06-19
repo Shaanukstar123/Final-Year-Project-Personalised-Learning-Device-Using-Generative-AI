@@ -764,16 +764,38 @@ video {
   }
 }
 
-
 .story-page {
-  /* background-image: url('../images/storypage/stainedPaper.jpg'); */
   background-color: #f7f3db;
+  background-image: url('../images/storypage/storyBackground.jpg');
+  background-size: cover; /* Ensures the background image covers the entire container */
   font-family: 'Times New Roman', Times, serif;
   font-size: large;
-  height:200vh;
-  width:100vw;
-  /*no margin*/
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  justify-content: space-between; /* Ensures the button container is at the bottom */
+  overflow: hidden; /* Hide vertical scrollbar */
+}
 
+#story-container {
+  padding: 20px;
+  text-align: justify;
+  font-size: 20px;
+  line-height: 1.5;
+  overflow-y: auto; /* Allow vertical scrolling */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+}
+
+#story-container::-webkit-scrollbar { 
+  display: none;  /* Safari and Chrome */
+}
+
+#story-container span {
+  display: inline-block; /* Required for transform to work */
+  white-space: pre; /* Preserve whitespace in the text */
+  font-family: 'Comic Sans MS'; /* Apply the Comic Sans MS font */
+  animation: slideIn 0.5s ease forwards; /* Apply the animation to each span */
 }
 /* .story-container{
   font-family: 'Times New Roman', Times, serif;
@@ -794,13 +816,7 @@ span {
   animation-fill-mode: forwards; /* This ensures that the properties defined in the last keyframe persist after the animation ends */
 }
 
-#story-container {
-  padding: 20px;
-  text-align: justify;
-  font-size: 16px;
-  line-height: 1.5;
-  overflow: auto; 
-}
+
 
 
 @keyframes fadeIn {
@@ -819,33 +835,34 @@ span {
   }
 } */
 
-#story-container span {
-  display: inline-block; /* Required for transform to work */
-  white-space: pre; /* Preserve whitespace in the text */
-  font-family: 'Comic Sans MS'; /* Apply the Comic Sans MS font */
-  animation: slideIn 0.5s ease forwards; /* Apply the animation to each span */
+/*Story page buttons*/
+.button-container {
+  display: flex;
+  justify-content: center;
+  padding: 10px;
+  background-color: #f7f3db;
+  border-top: 1px solid #ddd;
 }
 
 .button-icon {
-  font-size: 16px;
-  padding: 10px 20px;
-  color: white;
-  background-color: #007BFF;
-  border: none;
-  border-radius: 5px;
-  margin: 5px;
+  display:flex;
+  font-size: 25px;
+  color: rgb(65, 64, 64);
+  border-radius: 15px;
+  margin: 15px;
   cursor: pointer;
   display: flex;
   align-items: center;
   transition: background-color 0.3s ease;
 }
 
+
 .button-icon i {
   margin-right: 8px; /* Space between icon and text */
 }
 
 .button-icon:hover {
-  background-color: #0056b3; /* Darker shade on hover */
+  background-color: #92bde7; /* Darker shade on hover */
 }
 
 .audioPlayer {

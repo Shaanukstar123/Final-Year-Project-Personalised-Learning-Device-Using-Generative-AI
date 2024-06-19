@@ -13,26 +13,27 @@
     <div class="story-page">
         <div class="story-container" id="story-container"></div>
         <audio id="audioPlayer" controls hidden></audio>
-        <button id="play-audio-button" class="button-icon" aria-label="Play audio">
-            <i class="fas fa-volume-up"></i>
-        </button>        
-        <button id="next-page-button" class="button-icon">
-            <i class="fas fa-arrow-right"></i> 
+
+        <p id="titlearea"></p>
+        <p id="textarea"></p>
+    </div>
+    <div class="button-container">
+        <button id="previous-page-button" class="button-icon">
+            <i class="fas fa-arrow-left"></i> 
         </button>
         <button id="homeButton" class="button-icon">
             <i class="fas fa-home"></i>
         </button>
-        <!-- Speech Recognition Button and Display Area -->
-        <button id="speak" class="button-icon">
-            <i class="fas fa-microphone"></i> Speak
+        <button id="play-audio-button" class="button-icon" aria-label="Play audio">
+            <i class="fas fa-volume-up"></i>
         </button>
-        <p id ="titlearea"></p>
-        <p id="textarea"></p>
-        
-
+        <button id="speak" class="button-icon">
+            <i class="fas fa-microphone"></i>
+        </button>
+        <button id="next-page-button" class="button-icon">
+            <i class="fas fa-arrow-right"></i> 
+        </button>
     </div>
     <script type="module" src="story.js"></script>
-    
-    
 </body>
 </html>

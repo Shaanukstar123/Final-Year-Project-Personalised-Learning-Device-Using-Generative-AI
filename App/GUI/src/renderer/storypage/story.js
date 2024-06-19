@@ -47,7 +47,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const nextPageButton = document.getElementById('next-page-button');
     if (nextPageButton) {
-        nextPageButton.addEventListener('click', fetchNextPage);
+        nextPageButton.addEventListener('click', goToNextPage);
+    }
+
+    const prevPageButton = document.getElementById('previous-page-button');
+    if (prevPageButton) {
+        prevPageButton.addEventListener('click', goToPreviousPage);
     }
     initialiseSwipeDetection(storyContainer);
 });
@@ -59,7 +64,7 @@ function fetchStory(topicId){
         const storyContent = storyData.story + storyData.question;
         addPage(storyContent, storyData.imagePrompt, storyData.imagePrompt, storyData.audioUrl)
             .then(() => {
-                displayContentWithAnimation(storyContainer, storyContent);
+                displayContent(storyContainer, storyContent);
                 if (storyData.audioUrl) {
                     playAudio(storyData.audioUrl);
                 }
@@ -78,7 +83,7 @@ function fetchStory(topicId){
                 localStorage.setItem(`story_${topicId}`, JSON.stringify(storyData));
                 addPage(storyContent, imagePrompt, '', '')
                     .then(() => {
-                        displayContentWithAnimation(storyContainer, storyContent);
+                        displayContent(storyContainer, storyContent);
                         updateImage(imagePrompt);
                     });
             })
@@ -95,7 +100,7 @@ function fetchTopicContent(topicName) {
         const storyContent = storyData.story + storyData.question;
         addPage(storyContent, storyData.imagePrompt, storyData.imagePrompt, storyData.audioUrl)
             .then(() => {
-                displayContentWithAnimation(storyContainer, storyContent);
+                displayContent(storyContainer, storyContent);
                 if (storyData.audioUrl) {
                     playAudio(storyData.audioUrl);
                 }
@@ -114,7 +119,7 @@ function fetchTopicContent(topicName) {
                 localStorage.setItem(`story_${topicName}`, JSON.stringify(storyData));
                 addPage(storyContent, imagePrompt, '', '')
                     .then(() => {
-                        displayContentWithAnimation(storyContainer, storyContent);
+                        displayContent(storyContainer, storyContent);
                         updateImage(imagePrompt);
                     });
             })
@@ -132,7 +137,7 @@ function fetchCustomContent(topicName) {
         const imagePrompt = response.data.imagePrompt;
         addPage(storyContent, imagePrompt, '', '')
             .then(() => {
-                displayContentWithAnimation(storyContainer, storyContent);
+                displayContent(storyContainer, storyContent);
                 updateImage(imagePrompt);
             });
     })
@@ -191,7 +196,7 @@ function fetchNextPage() {
         if (storyContent) {
             addPage(storyContent, ''); // Add new page to pages array, initially without image
             const storyContainer = document.getElementById('story-container');
-            displayContentWithAnimation(storyContainer, storyContent);
+            displayContent(storyContainer, storyContent);
             updateImage(imagePrompt);
 
             if (topicId) {
@@ -344,31 +349,53 @@ function addPage(content, dallePrompt = '', imageUrl = '', audioUrl = '') {
     });
 }
 
-
-function displayContentWithAnimation(container, content) {
+function displayContent(container, content, animate = true) {
     // Clear the container first
-    if (container){
-        container.innerHTML = '';
+    container.innerHTML = '';
+
+    if (animate) {
+        const words = content.split(/\s+/);
+        cumulativeDelay = 0;  // Reset the delay for word animation
+        const wordDisplayInterval = 100; // Interval in milliseconds between each word
+        words.forEach(word => {
+            if (word.length > 0) {
+                const span = document.createElement('span');
+                span.textContent = word + ' ';
+                span.style.opacity = 0; // Start invisible
+                span.style.transition = 'opacity 1s ease-in-out';
+                container.appendChild(span);
+
+                setTimeout(() => {
+                    span.style.opacity = 1; // Fade in the word
+                }, cumulativeDelay);
+
+                cumulativeDelay += wordDisplayInterval; // Increment delay for the next word
+            }
+        });
+    } else {
+        const p = document.createElement('p');
+        p.textContent = content;
+        p.style.opacity = 1; // Directly visible
+        p.style.wordWrap = 'break-word'; // Ensure long words break and don't overflow
+        p.style.overflowWrap = 'break-word'; // Break long words
+        container.appendChild(p);
     }
+}
 
-    const words = content.split(/\s+/);
-    cumulativeDelay = 0;  // Reset the delay for word animation
-    const wordDisplayInterval = 100; // Interval in milliseconds between each word
-    words.forEach(word => {
-        if (word.length > 0) {
-            const span = document.createElement('span');
-            span.textContent = word + ' ';
-            span.style.opacity = 0; // Start invisible
-            span.style.transition = 'opacity 1s ease-in-out';
-            container.appendChild(span);
+function displayPage(index, animate = true) {
+    const storyContainer = document.getElementById('story-container');
+    storyContainer.innerHTML = ''; // Clear previous content
 
-            setTimeout(() => {
-                span.style.opacity = 1; // Fade in the word
-            }, cumulativeDelay);
-
-            cumulativeDelay += wordDisplayInterval; // Increment delay for the next word
+    if (index >= 0 && index < pages.length) {
+        const { content, imageUrl, audioUrl } = pages[index];
+        displayContent(storyContainer, content, animate);
+        if (imageUrl) {
+            displayImage(storyContainer, imageUrl);
         }
-    });
+        if (audioUrl) {
+            playAudio(audioUrl);
+        }
+    }
 }
 
 function displayImage(container, imageUrl) {
@@ -378,31 +405,14 @@ function displayImage(container, imageUrl) {
     } else {
         const imgElement = document.createElement('img');
         imgElement.src = imageUrl;
-        imgElement.style.width = '65%';
-        imgElement.style.height = '10%';
+        imgElement.style.width = '80%'; // Adjust width to be responsive
+        imgElement.style.height = 'auto'; // Maintain aspect ratio
         imgElement.style.marginTop = '20px';
         imgElement.style.display = 'block';
         imgElement.style.marginLeft = 'auto';
         imgElement.style.marginRight = 'auto';
         imgElement.style.border = '2px solid black';
         container.appendChild(imgElement);
-    }
-}
-
-
-function displayPage(index) {
-    const storyContainer = document.getElementById('story-container');
-    storyContainer.innerHTML = ''; // Clear previous content
-
-    if (index >= 0 && index < pages.length) {
-        const { content, imageUrl, audioUrl } = pages[index];
-        displayContentWithAnimation(storyContainer, content);
-        if (imageUrl) {
-            displayImage(storyContainer, imageUrl);
-        }
-        if (audioUrl) {
-            playAudio(audioUrl);
-        }
     }
 }
 
@@ -437,7 +447,7 @@ function initialiseSwipeDetection(element) {
 function goToNextPage() {
     if (currentPageIndex < pages.length - 1) {
         currentPageIndex++;
-        displayPage(currentPageIndex);
+        displayPage(currentPageIndex,false);
     } else {
         // If at the last page, fetch next page
         fetchNextPage();
@@ -447,7 +457,7 @@ function goToNextPage() {
 function goToPreviousPage() {
     if (currentPageIndex > 0) {
         currentPageIndex--;
-        displayPage(currentPageIndex);
+        displayPage(currentPageIndex,false);
     } else {
         currentPageIndex = 0;
     }
@@ -492,7 +502,8 @@ function fetchAudioForPage(text) {
 function playAudio(audioUrl) {
     const audioPlayer = document.getElementById('audioPlayer'); // Ensure this element exists in your HTML
     audioPlayer.src = audioUrl;
-    audioPlayer.play();
+    
+    // audioPlayer.play();
 }
 
 function updateAudioButtonVisibility() {
