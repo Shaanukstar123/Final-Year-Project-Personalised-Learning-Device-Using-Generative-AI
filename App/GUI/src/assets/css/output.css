@@ -964,3 +964,34 @@ span {
   align-items: center;
   border-radius: 1px;
 }
+
+body, html {
+  height: 100%;
+  margin: 0;
+}
+
+.loading-screen {
+  display: none; /* Hidden by default */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 9999; /* Ensure it is above other elements */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.loading-gif {
+  width: 120px; /* Adjust size as needed */
+  height: auto; /* Maintain aspect ratio */
+  margin-bottom: 20px; /* Space between GIF and text */
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

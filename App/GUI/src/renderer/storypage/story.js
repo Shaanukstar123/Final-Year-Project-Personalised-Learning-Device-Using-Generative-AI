@@ -58,16 +58,19 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function fetchStory(topicId){
+    showLoadingScreen();
     const cachedStory = localStorage.getItem(`story_${topicId}`);
     if (cachedStory) {
         const storyData = JSON.parse(cachedStory);
         const storyContent = storyData.story + storyData.question;
         addPage(storyContent, storyData.imagePrompt, storyData.imagePrompt, storyData.audioUrl)
             .then(() => {
+                
                 displayContent(storyContainer, storyContent);
                 if (storyData.audioUrl) {
                     playAudio(storyData.audioUrl);
                 }
+                
             });
     } else {
         axios.get(`http://localhost:5000/fetch_story/${topicId}`)
@@ -352,6 +355,7 @@ function addPage(content, dallePrompt = '', imageUrl = '', audioUrl = '') {
 function displayContent(container, content, animate = true) {
     // Clear the container first
     container.innerHTML = '';
+    hideLoadingScreen();
 
     if (animate) {
         const words = content.split(/\s+/);
@@ -664,17 +668,16 @@ const run = async () => {
 };
 
 
-async function getToken() {
-    try {
-        const response = await fetch('http://localhost:5000/get_token');
-        const data = await response.json();
-        if (response.ok) {
-            return data.token;
-        } else {
-            throw new Error(data.error || 'Failed to fetch the token');
-        }
-    } catch (error) {
-        console.error('Token fetch error:', error.message);
-        return null;
+function showLoadingScreen() {
+    const loadingScreen = document.getElementById('loading-screen');
+    if (loadingScreen) {
+        loadingScreen.style.display = 'flex';
+    }
+}
+
+function hideLoadingScreen() {
+    const loadingScreen = document.getElementById('loading-screen');
+    if (loadingScreen) {
+        loadingScreen.style.display = 'none';
     }
 }
