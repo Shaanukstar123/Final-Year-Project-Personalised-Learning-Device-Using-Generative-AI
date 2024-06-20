@@ -3,13 +3,12 @@ from langchain.prompts.prompt import PromptTemplate
 from langchain.chains.conversation.memory import ConversationBufferWindowMemory
 
 def initCustomContentModel(llm, output_parser):
-    memory = ConversationBufferWindowMemory(k=4, ai_prefix="Content Creator")#ConversationSummaryBufferMemory(llm=llm, max_token_limit= 500)
+    memory = ConversationBufferWindowMemory(k=4)#ConversationSummaryBufferMemory(llm=llm, max_token_limit= 500)
     promptText = '''
-    You are a content creator and reader for children's educational content. The user will give you a "Query" and you must to your best ability use that query to generate educational content. This be in any form of text such as stories, riddles, problems, explanations. Give the user freedom to choose if it's appropriate and keep them engaged. User target age: 7-12 years old.
-    If any images are needed for narration, write "DALL-E prompt: " and describe the image you want. Talk directly to the user at all times and don't break character.
+    You must create educational content based on the "Query" that the user provides you. The content be in any form of text such as stories, riddles, problems, explanations. Give the user freedom to choose if it's appropriate and keep them engaged. User is 7-12 years old so make it appropriate and fun.
+    Occasionally add an image to the page when necessary by writing a single "Image Prompt: " at the start of your response with a description of the image necessary. Talk directly to the user at all times.
     Current conversation: {history}
     Child: {input}
-    Content Creator: 
     '''
     prompt = PromptTemplate(input_variables=["history", "input"], template=promptText)
     #story chain with llm, prompt and memory with output parser as string

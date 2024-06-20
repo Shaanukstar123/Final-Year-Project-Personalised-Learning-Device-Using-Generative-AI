@@ -322,20 +322,27 @@ def cleanResponse(text):
     cleanedResponse = text
     questionPrompt = ""
     themes = ""
-    dalleMatch = re.search(r'DALL-E prompt:\s*(.*?)(\.|\n|$)', text, re.IGNORECASE)
+
+    # Match and remove DALL-E prompt
+    dalleMatch = re.search(r'image prompt:\s*(.*?)(\.|\n|$)', text, re.IGNORECASE)
     if dalleMatch:
         dallePrompt = dalleMatch.group(1).strip()
         # Remove the DALL-E prompt sentence from the text
-        cleanedResponse = re.sub(re.escape(dalleMatch.group(0)), '', text, flags=re.IGNORECASE)
-    themeMatch= re.search(r'Themes:\s*(.*?)(\.|\n|$)', text, re.IGNORECASE)
+        cleanedResponse = re.sub(r'image prompt:\s*' + re.escape(dallePrompt) + r'(\.|\n|$)', '', cleanedResponse, flags=re.IGNORECASE)
+
+    # Match and remove Themes
+    themeMatch = re.search(r'themes:\s*(.*?)(\.|\n|$)', text, re.IGNORECASE)
     if themeMatch:
         themes = themeMatch.group(1).strip()
-        # Remove the DALL-E prompt sentence from the text
-        cleanedResponse = re.sub(re.escape(themeMatch.group(0)), '', cleanedResponse, flags=re.IGNORECASE)
-    # cleanedResponse = re.sub(r'DALL-E Prompt:\s*', '', text, re.IGNORECASE)
+        # Remove the Themes sentence from the text
+        cleanedResponse = re.sub(r'themes:\s*' + re.escape(themes), '', cleanedResponse, flags=re.IGNORECASE)
+
+    # Match question
     questionMatch = re.search(r'question:\s*(.*)', text, re.IGNORECASE)
     if questionMatch:
         questionPrompt = questionMatch.group(1)
+    
+    cleanedResponse = re.sub(r'\bnarrator:\b', '', cleanedResponse, flags=re.IGNORECASE)
 
     return cleanedResponse, dallePrompt, questionPrompt, themes
     

@@ -15,18 +15,16 @@ def initialiseModel(llm, output_parser):
 
     # #llm = ChatOpenAI(openai_api_key = os.getenv("OPENAI_API_KEY"), model = "gpt-3.5-turbo-0125")
     # output_parser = StrOutputParser() #converts output to string
-    memory = ConversationBufferWindowMemory(k=4, ai_prefix="Narrator")#ConversationSummaryBufferMemory(llm=llm, max_token_limit= 500)
+    memory = ConversationBufferWindowMemory(k=4)#ConversationSummaryBufferMemory(llm=llm, max_token_limit= 500)
     promptText = """
-    The following is an interactive educational children's story-telling session between a 6-10 year old child reader and the narrator. The reader will give you a news article and your goal is to be the narrator 
-    and to create and continue a short interactive story based on the main topic of a news article. Respond with only a part of the story (1 page approx 100-300 words) with room for continuation. 
-    Start the page with a visual description of the page for prompting an image model beginning with "DALL-E Prompt: ". Then start the story with "STORY: ". Don't forget to introduce the context of the story by talking about
+    The following is an interactive educational children's story-telling session between a 6-10 year old child user and you. A news article will be given and your goal is to introduce what is going on in it, then
+    create and narrate a continuous short interactive story based on the main topic of a news article. Respond with only a part of the story (1 page approx 100-300 words) with room for continuation. 
+    Start the page with a single sentence visual prompt describing the page starting with "Image Prompt: ". The user doesn't know of the news article so explain what it happening and move on to the story. Don't forget to introduce the context of the story by talking about
     the news article briefly, assume the reader hasn't read the article. At the end of the page, either end the story with "THE END" or continue by
     asking an educational question to the reader such as making a decision that will change the next page of the story. Start this with "Question: ". No matter what response the reader gives, be the narrator for a children's story
-    with the age range fixed at 7-12 year olds. Also always output the educational topics and genres that summarise the response starting with  "Themes: "
-
+    with the age range fixed at 7-12 year olds. Also always output the educational topics and genres that summarise the response starting with  "Themes: " Your response must be direct.
     Current conversation: {history}
-    Reader: {input}
-    Narrator: 
+    User: {input}
     """
 
     prompt = PromptTemplate(input_variables=["history", "input"], template=promptText)
