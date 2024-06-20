@@ -637,16 +637,17 @@ video {
   background-image: url('../images/homepage/english.png');
 }
 .science {
-  background-image: url('../images/homepage/maths.webp');
+  background-image: url('../images/homepage/science.webp');
 }
 .maths {
-  background-image: url('../images/homepage/science.webp');
+  background-image: url('../images/homepage/maths.webp');
 }
 .music {
   background-image: url('../images/homepage/music.png');
 }
 
-/* General styles for all topic blocks */
+/* Subject topic blocks in homepage */
+
 .topic-block {
   margin-top: 3vw;
   margin-bottom: 1vw; 
@@ -672,6 +673,29 @@ video {
   display: flex;
 
 }
+/* Subject Topic grid */
+
+.topic-card {
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin: 10px;
+  text-align: center;
+  transition: transform 0.2s;
+  background: linear-gradient(to bottom, var(--start-color), var(--end-color));
+}
+
+.topic-card:hover {
+  transform: scale(1.05);
+}
+
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+  padding: 20px;
+}
+
 
 /* Styles for the search bar */
 .search-bar-container input {
@@ -844,6 +868,15 @@ span {
   border-top: 1px solid #ddd;
 }
 
+/* Subject page */
+.button-container2 {
+  display: flex;
+  justify-content: center;
+  padding: 10px;
+  background-color: #10647e;
+  border-top: 1px solid #17708b;
+}
+
 .button-icon {
   display:flex;
   font-size: 25px;
@@ -855,6 +888,19 @@ span {
   align-items: center;
   transition: background-color 0.3s ease;
 }
+
+.button-icon2 {
+  display:flex;
+  font-size: 25px;
+  color: rgb(186, 252, 248);
+  border-radius: 15px;
+  margin: 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: background-color 0.3s ease;
+}
+
 
 
 .button-icon i {

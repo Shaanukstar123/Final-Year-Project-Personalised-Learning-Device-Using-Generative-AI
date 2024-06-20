@@ -134,14 +134,20 @@ def fetch_custom_content():
 @app.route('/get_subject_topics', methods=['GET'])
 def get_subject_topics():
     subject = request.args.get('subject', '')
-    #subjects = ['history', 'geography', 'maths', 'science', 'english', 'music']
     if not subject:
         return jsonify({'error': 'Subject is required'}), 400
-    return generateSubjectTopics(subject)
-    try:
-        return get_subject_topics(subject)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+    
+    topics = generateSubjectTopics(subject)  # Assuming this function returns a list of topics
+    print("Generated topics: ", topics)
+    topics_with_colors = []
+
+    for topic in topics['topics']:
+        color = get_colour_for_topic(topic)  # Assuming this function returns the color for a topic
+        topics_with_colors.append({"topic": topic, "color": color})
+    print("Topics with colors: ", topics_with_colors)
+
+    return jsonify({"topics": topics_with_colors})
+
 
 @app.route('/recommendation_topics', methods=['GET'])
 def recommendation_topics():
@@ -338,7 +344,7 @@ def run_clustering_in_background():
     cursor = conn.cursor()
     cursor.execute('SELECT COUNT(*) FROM stories')
     count = cursor.fetchone()[0]
-    if count % 2 == 0:
+    if count % 5 == 0:
         run_clustering_on_db(llm, jsonOutputParser)
     conn.close()
 

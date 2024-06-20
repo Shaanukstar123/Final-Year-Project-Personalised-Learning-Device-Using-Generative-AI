@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Recommendations</title>
@@ -10,12 +11,17 @@
     <div class="container mx-auto px-4 py-8">
         <script src="recommendations.js"></script>
         <div class="flex justify-between items-center mb-8">
-            <h1 class="text-3xl font-bold text-center">Recommended Topics</h1>
-            <button id="back-button" class="px-4 py-2 rounded-xl shadow-xl bg-purple-500 text-white hover:bg-purple-600 transition duration-300">
-                Back to Home
+        </div>
+
+        <div id="recommendations-grid" class="grid grid-cols-2 md:grid-cols-3 gap-4"></div>
+        <div class="button-container2">
+            <button id="back-button" class="button-icon2">
+                <i class="fas fa-home"></i>
+            </button>
+            <button id="refresh-button" class="button-icon2">
+                <i class="fa-solid fa-arrows-rotate"></i>
             </button>
         </div>
-        <div id="recommendations-grid" class="grid grid-cols-2 md:grid-cols-3 gap-4"></div>
     </div>
 </body>
 </html>

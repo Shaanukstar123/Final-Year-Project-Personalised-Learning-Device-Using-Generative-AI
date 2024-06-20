@@ -1,4 +1,5 @@
 const axios = require('axios');
+const { ipcRenderer } = require('electron');
 
 document.addEventListener('DOMContentLoaded', () => {
     fetchRecommendations();
@@ -9,6 +10,11 @@ document.addEventListener('DOMContentLoaded', () => {
             window.location.href = '../homepage/index.html'; // Adjust the path to your homepage
         });
     }
+    const refreshButton = document.getElementById('refresh-button');
+    refreshButton.addEventListener('click', () => {
+        console.log('Sending reload-window signal');
+        ipcRenderer.send('reload-window');
+    });
 });
 
 function fetchRecommendations() {

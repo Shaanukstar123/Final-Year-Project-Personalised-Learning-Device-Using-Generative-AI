@@ -1,4 +1,5 @@
-const { app, BrowserWindow, globalShortcut } = require('electron');
+const { Console } = require('console');
+const { app, BrowserWindow, globalShortcut, ipcMain } = require('electron');
 const VirtualKeyboard = require('electron-virtual-keyboard');
 const path = require('path');
 
@@ -32,6 +33,12 @@ function createWindow() {
 
   // Load the index.html of the app (pointing to your new homepage).
   mainWindow.loadFile('src/renderer/homepage/index.html');
+
+  // Waits for the reload signal from refresh button and reloads the window
+  ipcMain.on('reload-window', () => {
+    console.log('Reloading window');
+    mainWindow.reload();
+  });
 
   // Initialize the virtual keyboard
   const vkb = new VirtualKeyboard(mainWindow.webContents);
