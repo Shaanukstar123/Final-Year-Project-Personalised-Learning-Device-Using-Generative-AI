@@ -5,11 +5,7 @@ import matplotlib.colors as mcolors
 # Load the spacy model
 nlp = spacy.load('en_core_web_md')
 
-
-import matplotlib.colors as mcolors
-
-def get_colour_for_topic(topic):
-    # Define a list of reference colors and their corresponding concepts
+def batch_get_colors(topics):
     reference_colors = {
         'limegreen': 'adventure discovery nature pollution animals environment ecology growth renewal tree forest plant biology life biology geography recycling maps world ',
         'deepskyblue': 'sports space football problems mathematics pythagoras geometry arithmetic calculation numbers logic analysis technology computer robotics physics chemistry astronomy',
@@ -29,15 +25,21 @@ def get_colour_for_topic(topic):
         'skyblue': 'calmness stability trust loyalty intelligence wisdom confidence truth faith heaven water river ocean sky tranquility tsunami flood rain '
     }
 
-    topic_doc = nlp(topic)
-    max_similarity = -1
-    best_color = 'dimgray'  # Default color
+    topic_docs = list(nlp.pipe(topics))
+    concept_docs = {color: nlp(concepts) for color, concepts in reference_colors.items()}
 
-    for color, concepts in reference_colors.items():
-        concept_doc = nlp(concepts)
-        similarity = topic_doc.similarity(concept_doc)
-        if similarity > max_similarity:
-            max_similarity = similarity
-            best_color = color
+    topics_with_colors = []
 
-    return mcolors.to_hex(best_color)
+    for topic, topic_doc in zip(topics, topic_docs):
+        max_similarity = -1
+        best_color = 'dimgray'  # Default color
+
+        for color, concept_doc in concept_docs.items():
+            similarity = topic_doc.similarity(concept_doc)
+            if similarity > max_similarity:
+                max_similarity = similarity
+                best_color = color
+
+        topics_with_colors.append({"topic": topic, "color": mcolors.to_hex(best_color)})
+
+    return topics_with_colors

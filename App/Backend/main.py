@@ -21,7 +21,7 @@ from imageGenerator import generateImageWithDALLE
 from textSummariser import summariseText
 from database import initialiseDatabase
 from clustering import run_clustering_on_db
-from topicColours import get_colour_for_topic
+from topicColours import batch_get_colors
 
 from recommendationTopics import generateRecommendationTopics
 #from tests.apiTests import test_recommendation_topics
@@ -138,12 +138,9 @@ def get_subject_topics():
         return jsonify({'error': 'Subject is required'}), 400
     
     topics = generateSubjectTopics(subject)  # Assuming this function returns a list of topics
-    print("Generated topics: ", topics)
-    topics_with_colors = []
+    print("Generated topics: ", topics['topics'])
 
-    for topic in topics['topics']:
-        color = get_colour_for_topic(topic)  # Assuming this function returns the color for a topic
-        topics_with_colors.append({"topic": topic, "color": color})
+    topics_with_colors = batch_get_colors(topics['topics'])
     print("Topics with colors: ", topics_with_colors)
 
     return jsonify({"topics": topics_with_colors})
