@@ -15,13 +15,14 @@ from langchain_core.output_parsers import StrOutputParser
 from articleNamerGPT import generateNewNames
 from storyChain import initialiseStory, initialiseModel, continueStory
 from generateContent import initialiseContentModel, initialiseContent, continueContent
-from customContentChain import initCustomContentModel
+from customContentChain import initCustomContentModel, initialiseCustomContent, continueCustomContent
 from subjectChain import generateSubjectTopics
 from imageGenerator import generateImageWithDALLE
 from textSummariser import summariseText
 from database import initialiseDatabase
 from clustering import run_clustering_on_db
 from topicColours import batch_get_colors
+from langchain_openai import ChatOpenAI
 
 from recommendationTopics import generateRecommendationTopics
 #from tests.apiTests import test_recommendation_topics
@@ -39,13 +40,15 @@ load_dotenv()
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "keys/GoogleFypKey.json"
 OpenAI.api_key = os.getenv("OPENAI_API_KEY")
 
-llm = AzureChatOpenAI(
-    api_version=os.getenv("OPENAI_API_VERSION"),
-    api_key=os.getenv("AZURE_API_KEY"),
-    azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
-    azure_deployment="StoryGPT3",
-    verbose=True
-)
+# llm = AzureChatOpenAI(
+#     api_version=os.getenv("OPENAI_API_VERSION"),
+#     api_key=os.getenv("AZURE_API_KEY"),
+#     azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+#     azure_deployment="StoryGPT3",
+#     verbose=True
+# )
+#gpt api llm version
+llm = ChatOpenAI(api_key=os.getenv("OPENAI_API_KEY"), model="gpt-4o", verbose=True)
 jsonOutputParser = JsonOutputParser()  # Converts output to JSON
 stringOutputParser = StrOutputParser()  # Converts output to string
 #storyChain = initialiseModel()
@@ -84,6 +87,7 @@ def fetch_story(id):
     print("Response: ", response)
     response, imagePrompt, question, themes = cleanResponse(response)
     store_story(id, response, imagePrompt, "", question, themes)
+    print("Image prompt: ",imagePrompt)
     check_and_run_clustering()
     return jsonify({"story": response, "imagePrompt": imagePrompt, "question": question})
 
@@ -95,7 +99,6 @@ def fetch_content():
     print("Response: ", response)
     response, imagePrompt, question, themes = cleanResponse(response)
     store_story(topic, response, imagePrompt, "", question, themes)
-    check_and_run_clustering()
     return jsonify({"story": response, "imagePrompt": imagePrompt, "question": question})
 
 
@@ -123,12 +126,20 @@ def continue_content():
 def fetch_custom_content():
     customQuery = request.args.get('query', '')
     global customChain
-    response = initialiseContent(customChain, customQuery)
+    response = initialiseCustomContent(customChain, customQuery)
     print("Response: ", response)
     response, imagePrompt, question, themes = cleanResponse(response)
     store_story(customQuery, response, imagePrompt, "", question, themes)
-    check_and_run_clustering()
     return jsonify({"story": response, "imagePrompt": imagePrompt, "question": question})
+
+@app.route('/continue_custom_content', methods=['GET'])
+def continue_custom_content():
+    global customChain
+    user_input = request.args.get('user_input', '')
+    response = continueCustomContent(customChain, user_input)
+    response, imagePrompt, question, themes = cleanResponse(response)
+    append_story(user_input, response, imagePrompt, themes)
+    return jsonify({"story": response, "imagePrompt": imagePrompt})
     
 
 @app.route('/get_subject_topics', methods=['GET'])
@@ -311,25 +322,33 @@ def cleanResponse(text):
     themes = ""
 
     # Match and remove DALL-E prompt
-    dalleMatch = re.search(r'image prompt:\s*(.*?)(\.|\n|$)', text, re.IGNORECASE)
-    if dalleMatch:
-        dallePrompt = dalleMatch.group(1).strip()
-        # Remove the DALL-E prompt sentence from the text
-        cleanedResponse = re.sub(r'image prompt:\s*' + re.escape(dallePrompt) + r'(\.|\n|$)', '', cleanedResponse, flags=re.IGNORECASE)
+    contentMatch = re.search(r'(.*?)\s*Content:\s*(.*)', text, re.IGNORECASE | re.DOTALL)
+    if contentMatch:
+        dallePrompt = contentMatch.group(1).strip()
+        cleanedResponse = contentMatch.group(2).strip()
+    else:
+        # Match and remove DALL-E prompt
+        dalleMatch = re.search(r'image prompt:\s*(.*?)(\.|\n|$)', text, re.IGNORECASE)
+        if dalleMatch:
+            dallePrompt = dalleMatch.group(1).strip()
+            # Remove the DALL-E prompt sentence from the text
+            cleanedResponse = re.sub(r'image prompt:\s*' + re.escape(dallePrompt) + r'(\.|\n|$)', '', cleanedResponse, flags=re.IGNORECASE)
+
 
     # Match and remove Themes
     themeMatch = re.search(r'themes:\s*(.*?)(\.|\n|$)', text, re.IGNORECASE)
-    if themeMatch:
+    if (themeMatch):
         themes = themeMatch.group(1).strip()
         # Remove the Themes sentence from the text
         cleanedResponse = re.sub(r'themes:\s*' + re.escape(themes), '', cleanedResponse, flags=re.IGNORECASE)
 
     # Match question
-    questionMatch = re.search(r'question:\s*(.*)', text, re.IGNORECASE)
-    if questionMatch:
-        questionPrompt = questionMatch.group(1)
-    
+    # questionMatch = re.search(r'question:\s*(.*)', text, re.IGNORECASE)
+    # if questionMatch:
+    #     questionPrompt = questionMatch.group(1)
+
     cleanedResponse = re.sub(r'\bnarrator:\b', '', cleanedResponse, flags=re.IGNORECASE)
+    cleanedResponse = re.sub(r'\*', '', cleanedResponse)
 
     return cleanedResponse, dallePrompt, questionPrompt, themes
     
@@ -338,7 +357,7 @@ def run_clustering_in_background():
     cursor = conn.cursor()
     cursor.execute('SELECT COUNT(*) FROM stories')
     count = cursor.fetchone()[0]
-    if count % 5 == 0:
+    if count % 1000 == 0:
         run_clustering_on_db(llm, jsonOutputParser)
     conn.close()
 

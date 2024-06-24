@@ -165,12 +165,14 @@ function fetchNextPage() {
         // if (cachedStory) {
         //     storyType = JSON.parse(cachedStory).type;
         // }
-    } else{
+    } else if (topicName){
         storyType = 'content';
         // const cachedStory = localStorage.getItem(`story_${topicName}`);
         // if (cachedStory) {
         //     storyType = JSON.parse(cachedStory).type;
         // }
+    } else{
+        storyType = 'custom';
     }
     console.log("storyType", storyType)
     console.log("TopicId", topicId)
@@ -182,6 +184,9 @@ function fetchNextPage() {
         endpoint = 'continue_story';
     } else if (storyType === 'content') {
         endpoint = 'continue_content';
+    }
+    else if (storyType === 'custom') {
+        endpoint = 'continue_custom_content';
     } else {
         console.error('Unknown continuation type.');
         return;

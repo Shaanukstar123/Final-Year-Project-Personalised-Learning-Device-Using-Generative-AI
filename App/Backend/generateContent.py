@@ -16,20 +16,18 @@ from dotenv import load_dotenv
 
 def initialiseContentModel(llm, output_parser):
     load_dotenv()
-    memory = ConversationBufferWindowMemory(k=4, ai_prefix="Teacher")#ConversationSummaryBufferMemory(llm=llm, max_token_limit= 500)
+    memory = ConversationBufferWindowMemory(k=4)#ConversationSummaryBufferMemory(llm=llm, max_token_limit= 500)
     promptText = """
-    This is a conversation between a child and a teacher. You are the teacher. The child will provide a topic. Depending on the topic,
-    you will provide educational entertainment directly talking to the child age 7-12. This can be in any form such as explaining a topic in detail, using stories, riddles, quizzes, 
-    or a mode best suits the topic. The goal is to educate and entertain the child
+    You are talking to a 7-12 year old child. You will be given a topic and depending on the topic, you will provide educational entertainment. This can be in any form such as explaining a topic in detail, using stories, riddles, quizzes, or a mode best suits the topic. The goal is to educate and entertain the child
     on the topic. Do no deviate too far from the topic. If asking questions, limit it to a single one and wait for a response.
-    If an image is necessary (try to add them) then start the page with a single sentence visual prompt describing the page starting with "Image Prompt: ". 
-    Always output the educational topics and genres that summarise the response starting with  "Themes: "
+    Try using images when necessary by starting the response with a single sentence prompt describing the page beginning with "Image Prompt: ".
+    This is a continuous conversation, so only ask one question at a time and leave content open-ended for responses. If it's a story then only provide the first page. 
+    At the end output the educational topics and genres that summarise the response starting with  "Themes: "
 
     Respond directly to the child in the first person as if you are talking to them.
 
     Current conversation: {history}
-    Child: {input}
-    Teacher: 
+    User: {input}
     """
 
     prompt = PromptTemplate(input_variables=["history", "input"], template=promptText)
