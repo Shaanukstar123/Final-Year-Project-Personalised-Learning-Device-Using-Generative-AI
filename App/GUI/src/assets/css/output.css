@@ -1041,3 +1041,22 @@ body, html {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+#fullscreen-toggle {
+  position: fixed;
+  bottom: 40px;
+  left: 20px;
+  width: 40px;
+  height: 40px;
+  color: rgb(41, 171, 180);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+}
+
+#fullscreen-toggle:hover {
+  background-color: #1E40AF; /* Tailwind blue-800 */
+}

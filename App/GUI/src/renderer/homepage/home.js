@@ -1,5 +1,6 @@
 const axios = require('axios');
 const { runKioskBoard } = require('./keyboard.js');
+const { ipcRenderer } = require('electron');
 
 function getTopicsFromAPI() {
     document.addEventListener('DOMContentLoaded', async () => {
@@ -19,6 +20,7 @@ function getTopicsFromAPI() {
         setupSubjectButtons();
         setupClusterButton();
         setupRecommendationsButton();
+        setupFullscreenToggleButton();
 
         // Initialize the on-screen keyboard for the search input
         initializeVirtualKeyboard();
@@ -112,6 +114,15 @@ function setupSearchBar() {
             if (query) {
                 window.location.href = `../storypage/story.html?customTopic=${encodeURIComponent(query)}`;
             }
+        });
+    }
+}
+
+function setupFullscreenToggleButton() {
+    const fullscreenButton = document.getElementById('fullscreen-toggle');
+    if (fullscreenButton) {
+        fullscreenButton.addEventListener('click', () => {
+            ipcRenderer.send('toggle-fullscreen');
         });
     }
 }

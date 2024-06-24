@@ -56,6 +56,11 @@ function createWindow() {
     }
   });
 
+  ipcMain.on('toggle-fullscreen', () => {
+    const isFullScreen = mainWindow.isFullScreen();
+    mainWindow.setFullScreen(!isFullScreen);
+  });
+
   // mainWindow.setMenu(null);
   // mainWindow.on('closed', function () {
   //   mainWindow = null;
