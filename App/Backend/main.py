@@ -230,11 +230,12 @@ def clear_db():
 
 @app.route('/run_clustering', methods=['GET'])
 def run_clustering():
-    try:
-        run_clustering_on_db()
-        return jsonify({"message": "Clustering run successfully"}), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    run_clustering_on_db(llm,jsonOutputParser, visualise=True)
+    # try:
+    #     run_clustering_on_db()
+    #     return jsonify({"message": "Clustering run successfully"}), 200
+    # except Exception as e:
+    #     return jsonify({"error": str(e)}), 500
     
     
 '''Helper Functions'''

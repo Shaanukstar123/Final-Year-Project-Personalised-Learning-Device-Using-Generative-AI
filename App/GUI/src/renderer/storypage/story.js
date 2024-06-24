@@ -256,7 +256,7 @@ function updateImage(prompt, skipCache = false) {
                         console.log("image response", response.data);
                         const imageUrl = response.data.imageUrl;
                         displayImage(document.getElementById('story-container'), imageUrl);
-                        resolve();
+                        resolve(imageUrl);
                     })
                     .catch(error => {
                         console.error('Error fetching image:', error);
@@ -267,7 +267,7 @@ function updateImage(prompt, skipCache = false) {
                 if (storyData.pages[currentPage] && storyData.pages[currentPage].imageUrl) {
                     pages[currentPage].imageUrl = storyData.pages[currentPage].imageUrl;
                     displayImage(document.getElementById('story-container'), storyData.pages[currentPage].imageUrl);
-                    resolve();
+                    resolve(storyData.pages[currentPage].imageUrl);
                 } else {
                     axios.post('http://localhost:5000/get_image', { text: prompt })
                         .then(response => {
@@ -284,7 +284,7 @@ function updateImage(prompt, skipCache = false) {
                                 }
                                 storyData.pages[currentPage].imageUrl = imageUrl;
                                 localStorage.setItem(storyKey, JSON.stringify(storyData));
-                                resolve();
+                                resolve(imageUrl);
                             } else {
                                 console.error('Page not found at currentPageIndex');
                                 reject();

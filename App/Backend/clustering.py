@@ -169,7 +169,7 @@ def visualise_word_clusters_3d(words, vectors, cluster_labels):
     plt.legend()
     plt.show()
 
-def vectorClustering3d(words):
+def vectorClustering3d(words,visualise=False):
     conn = create_connection("vectors.db")
     
     word_embeddings = textToWordVectors(words)
@@ -195,11 +195,12 @@ def vectorClustering3d(words):
             if cluster_id != -1:
                 cluster_points = [unique_words[i] for i in range(len(unique_words)) if cluster_assignment[i] == cluster_id]
                 clusters.append({'cluster_id': cluster_id, 'points': cluster_points})
-
+        if visualise:
+            visualise_word_clusters_3d(unique_words, unique_vectors, cluster_assignment)
         #visualise_word_clusters_3d(unique_words, unique_vectors, cluster_assignment)
         return clusters
 
-def run_clustering_on_db(llm, output_parser):
+def run_clustering_on_db(llm, output_parser, visualise=False):
     conn = create_connection('data/stories.db')
     cur = conn.cursor()
     cur.execute("SELECT themes FROM stories")
@@ -213,7 +214,10 @@ def run_clustering_on_db(llm, output_parser):
             ldaTopics = getLdaTopics(story)
             storyLdaArray.extend(ldaTopics)
             print(f"Extracted LDA Topics: {ldaTopics}")
-
+    
+    if visualise:
+        clusters = vectorClustering3d(storyLdaArray, True)
+        
     clusters = vectorClustering3d(storyLdaArray)
     
     recommendations = []
