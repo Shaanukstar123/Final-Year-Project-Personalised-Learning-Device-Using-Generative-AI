@@ -148,20 +148,10 @@ def get_subject_topics():
 
 @app.route('/recommendation_topics', methods=['GET'])
 def recommendation_topics():
-    recommendations = get_recommendations_from_db()  # Your existing function to get recommendations
-    topics_with_colors = []
-
-    for topic in recommendations:
-        color = get_colour_for_topic(topic)
-        topics_with_colors.append({"topic": topic, "color": color})
+    recommendations = get_recommendations_from_db()
+    topics_with_colors = batch_get_colors(recommendations)
     print("Topics with colors: ", topics_with_colors)
-
     return jsonify({"topics": topics_with_colors})
-    # try:
-        
-    # except Exception as e:
-    #     return jsonify({'error': str(e)}), 500
-
 
 #Speech to text api token fetcher
 @app.route('/get_token', methods=['GET'])
