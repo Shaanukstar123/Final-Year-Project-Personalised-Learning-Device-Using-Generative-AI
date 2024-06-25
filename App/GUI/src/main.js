@@ -27,7 +27,7 @@ function createWindow() {
     width: 800,
     height: 1280, // resolution of pi display
     // kiosk: true,
-    // frame: false,
+    frame: false,
     // fullscreen: true, // Enable just this to show fullscreen without any other tab components
   });
 

@@ -683,10 +683,11 @@ const run = async () => {
   }
 
   isRecording = !isRecording;
-  buttonEl.innerText = isRecording ? "Stop" : "Record";
+//   buttonEl.innerText = isRecording ? "Stop" : "Record";
+  buttonEl.innerHTML = isRecording ? '<i class="fas fa-stop"></i>': '<i class="fas fa-microphone"></i>'
   titleEl.innerText = isRecording
-    ? "Click stop to end recording!"
-    : "Click start to begin recording!";
+    ? "..."
+    : "...";
 };
 
 
