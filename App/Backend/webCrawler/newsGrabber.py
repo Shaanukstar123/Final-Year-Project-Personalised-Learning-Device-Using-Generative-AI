@@ -15,9 +15,10 @@ class CrawlingAgent(CrawlSpider):
     scraped_data = []
 
     rules = (
-        Rule(LinkExtractor(allow=('/newsround/[6-9]{2}\d*$')), callback='parse_item', follow=True),
-        #example: https://www.bbc.co.uk/newsround/61179377
+    Rule(LinkExtractor(allow=r'/newsround/[6-9]\d*$'), callback='parse_item', follow=True),
+    # example: https://www.bbc.co.uk/newsround/61179377
     )
+
 
     def parse_item(self, response):
         article_name = response.xpath('//h1/text()').get() or response.css('h1::text').get()
@@ -42,7 +43,7 @@ def run_crawler():
         'FEED_FORMAT': 'json',
         'FEED_URI': output_file,
         'LOG_LEVEL': 'INFO',
-        'CLOSESPIDER_ITEMCOUNT': 10
+        'CLOSESPIDER_ITEMCOUNT': 30
     })
     process.crawl(CrawlingAgent)
     process.start()
